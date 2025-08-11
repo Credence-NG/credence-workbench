@@ -1,6 +1,6 @@
 
 import { Alert, Pagination } from 'flowbite-react';
-import React, {  useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 
 import type { GetAllSchemaListParameter } from './interfaces';
@@ -26,7 +26,7 @@ import { DidMethod, SchemaType, SchemaTypes } from '../../../common/enums';
 import { envConfig } from '../../../config/envConfig';
 
 const SchemaList = (props: {
-		schemaSelectionCallback: (
+	schemaSelectionCallback: (
 		schemaId: string,
 		schemaDetails: SchemaDetails,
 	) => void;
@@ -59,10 +59,10 @@ const SchemaList = (props: {
 	const [searchValue, setSearchValue] = useState('');
 	const [schemaType, setSchemaType] = useState('');
 
-	const [defaultDropdownValue]= useState<string[]>([`Organization's schema`,'All schemas']);
-	const[selectedValue,setSelectedValue]=useState<string>(defaultDropdownValue[0])
-	const [w3cSchema,setW3CSchema]= useState<boolean>(false);
-	const [isNoLedger,setisNoLedger]= useState<boolean>(false);	
+	const [defaultDropdownValue] = useState<string[]>([`Organization's schema`, 'All schemas']);
+	const [selectedValue, setSelectedValue] = useState<string>(defaultDropdownValue[0])
+	const [w3cSchema, setW3CSchema] = useState<boolean>(false);
+	const [isNoLedger, setisNoLedger] = useState<boolean>(false);
 
 	const getSchemaList = async (
 		schemaListAPIParameter: GetAllSchemaListParameter,
@@ -82,13 +82,13 @@ const SchemaList = (props: {
 				);
 			}
 
-			const { data } = schemaList as AxiosResponse;	
+			const { data } = schemaList as AxiosResponse;
 			if (schemaList === 'Schema records not found') {
 				setLoading(false);
 				setSchemaList([]);
 			}
 
-			if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {				
+			if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
 				if (data?.data?.data) {
 					setTotalItem(data?.data?.lastPage);
 					setSchemaList(data?.data?.data);
@@ -122,13 +122,13 @@ const SchemaList = (props: {
 		event.preventDefault();
 		const inputValue = event.target.value;
 		setSearchValue(inputValue);
-	
+
 		setSchemaListAPIParameter(prev => ({
 			...prev,
 			search: allSchemaFlag ? '' : inputValue,
 			allSearch: allSchemaFlag ? inputValue : '',
 		}));
-	
+
 		setTimeout(() => {
 			getSchemaList(
 				{
@@ -140,19 +140,19 @@ const SchemaList = (props: {
 			);
 		}, 100);
 	};
-	
+
 	const schemaSelectionCallback = (
 		{
 			schemaId,
 			attributes,
 			issuerDid,
 			created,
-		  }: {
+		}: {
 			schemaId: string;
 			attributes: string[];
 			issuerDid: string;
 			created: string;
-		  }) => {
+		}) => {
 		const schemaDetails = {
 			attribute: attributes,
 			issuerDid,
@@ -185,9 +185,9 @@ const SchemaList = (props: {
 			created,
 		};
 		props.W3CSchemaSelectionCallback(schemaId, w3cSchemaDetails);
-		await setToLocalStorage(storageKeys.W3C_SCHEMA_DATA, w3cSchemaDetails);		
+		await setToLocalStorage(storageKeys.W3C_SCHEMA_DATA, w3cSchemaDetails);
 	};
-	
+
 
 	const handleW3CIssue = async (
 		schemaId: string,
@@ -196,31 +196,31 @@ const SchemaList = (props: {
 		issuerDid: string,
 		attributes: [],
 		created: string
-	  ) => {
+	) => {
 		const schemaDetails = {
-		  schemaId,
-		  schemaName,
-		  version,
-		  issuerDid,
-		  attributes,
-		  created,
-		}; 
+			schemaId,
+			schemaName,
+			version,
+			issuerDid,
+			attributes,
+			created,
+		};
 		await setToLocalStorage(storageKeys.W3C_SCHEMA_DETAILS, schemaDetails);
-		
-	  };
+
+	};
 
 	const handleFilter = async (e: React.ChangeEvent<HTMLSelectElement>) => {
 		setSelectedValue(e.target.value);
-	
+
 		const isAllSchemas = e.target.value === allSchemas;
 		setAllSchemaFlag(isAllSchemas);
 		await setToLocalStorage(storageKeys.ALL_SCHEMAS, isAllSchemas ? `true` : `false`);
 	};
-	
+
 	useEffect(() => {
 		getSchemaList(schemaListAPIParameter, allSchemaFlag);
-}, [allSchemaFlag]);
-	
+	}, [allSchemaFlag]);
+
 	const fetchOrganizationDetails = async () => {
 		setLoading(true);
 		const orgId = await getFromLocalStorage(storageKeys.ORG_ID);
@@ -248,8 +248,8 @@ const SchemaList = (props: {
 		setLoading(false);
 	};
 
-	useEffect(() => {	
-			setSelectedValue(defaultDropdownValue[0])
+	useEffect(() => {
+		setSelectedValue(defaultDropdownValue[0])
 	}, []);
 
 	useEffect(() => {
@@ -257,27 +257,27 @@ const SchemaList = (props: {
 		fetchOrganizationDetails();
 		(async () => {
 			try {
-				const data: ICheckEcosystem = await checkEcosystem();				
+				const data: ICheckEcosystem = await checkEcosystem();
 				setIsEcosystemData(data);
 			} catch (error) {
 				console.log(error);
 			}
 		})();
 		(async () => {
-			await setToLocalStorage (storageKeys.ALL_SCHEMAS, `false`);
-				})();
+			await setToLocalStorage(storageKeys.ALL_SCHEMAS, `false`);
+		})();
 	}, []);
 
 
 	const createSchemaTitle = isEcosystemData?.isEcosystemMember
-		? { title: 'Schema Endorsement', toolTip: 'Add new schema request', svg: <SchemaEndorsement/> }
-		: { title: 'Create', svg: <Create/>, toolTip: 'Create new schema' };	const emptyListTitle = 'No Schemas';
+		? { title: 'Schema Endorsement', toolTip: 'Add new schema request', svg: <SchemaEndorsement /> }
+		: { title: 'Create', svg: <Create />, toolTip: 'Create new schema' }; const emptyListTitle = 'No Schemas';
 	const emptyListDesc = 'Get started by creating a new Schema';
 	const emptyListBtn = isEcosystemData?.isEcosystemMember
-	? { title: 'Schema Endorsement', svg: <SchemaEndorsement/> }
-	: { title: 'Create Schema', svg: <Create/> };
+		? { title: 'Schema Endorsement', svg: <SchemaEndorsement /> }
+		: { title: 'Create Schema', svg: <Create /> };
 
-	
+
 	return (
 		<div className="px-4 pt-2">
 			<div className="mb-4 col-span-full xl:mb-2">
@@ -290,7 +290,7 @@ const SchemaList = (props: {
 						<h1 className="ml-1 text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white mr-auto">
 							Schemas
 						</h1>
-						<SearchInput onInputChange={onSearch} value={searchValue}/>
+						<SearchInput onInputChange={onSearch} value={searchValue} />
 
 						<select
 							onChange={handleFilter}
@@ -308,23 +308,23 @@ const SchemaList = (props: {
 						<div className="flex space-x-2">
 							{walletStatus ? (
 								<RoleViewButton
-								title={createSchemaTitle.toolTip}
+									title={createSchemaTitle.toolTip}
 									buttonTitle={createSchemaTitle.title}
-									feature={Features.CRETAE_SCHEMA}
+									feature={Features.CREATE_SCHEMA}
 									svgComponent={createSchemaTitle.svg}
 									onClickEvent={() => {
 										if (createSchemaTitle.title === 'Schema Endorsement') {
-									window.location.href = `${envConfig.PUBLIC_ECOSYSTEM_FRONT_END_URL}${pathRoutes.organizations.schemas}` 
+											window.location.href = `${envConfig.PUBLIC_ECOSYSTEM_FRONT_END_URL}${pathRoutes.organizations.schemas}`
 
 										} else {
-										  window.location.href = `${pathRoutes.organizations.createSchema}`;
+											window.location.href = `${pathRoutes.organizations.createSchema}`;
 										}
-									  }}
+									}}
 								/>
 							) : (
 								<RoleViewButton
 									buttonTitle={createSchemaTitle.title}
-									feature={Features.CRETAE_SCHEMA}
+									feature={Features.CREATE_SCHEMA}
 									svgComponent={createSchemaTitle.svg}
 									onClickEvent={() => {
 										window.location.href = `${pathRoutes.organizations.dashboard}`;
@@ -365,7 +365,7 @@ const SchemaList = (props: {
 											w3cSchema={w3cSchema}
 											noLedger={isNoLedger}
 											isVerification={verificationFlag}
-																					
+
 										/>
 									</div>
 								))}
@@ -390,7 +390,7 @@ const SchemaList = (props: {
 					</div>
 				) : (
 					<div>
-						{ loading ? (
+						{loading ? (
 							<div className="flex items-center justify-center mb-4">
 								<CustomSpinner />
 							</div>

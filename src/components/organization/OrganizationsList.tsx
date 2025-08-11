@@ -1,6 +1,6 @@
 
 import React from 'react';
-import  type {ChangeEvent } from 'react';
+import type { ChangeEvent } from 'react';
 import { Card, Pagination } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 import { apiStatusCodes, storageKeys } from '../../config/CommonConstant';
@@ -63,7 +63,7 @@ const OrganizationsList = () => {
 		const { data } = response as AxiosResponse;
 		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
 			const totalPages = data?.data?.totalPages;
-        const totalCount =data?.data?.totalCount;
+			const totalCount = data?.data?.totalCount;
 			const orgList = data?.data?.organizations.map((userOrg: Organisation) => {
 				const roles: string[] = userOrg.userOrgRoles.map(
 					(role) => role.orgRole.name,
@@ -133,7 +133,7 @@ const OrganizationsList = () => {
 	);
 
 	let content: React.JSX.Element = <></>;
-	
+
 	if (filteredOrganizations && filteredOrganizations.length > 0) {
 		content = (
 			<div>
@@ -221,7 +221,7 @@ const OrganizationsList = () => {
 				description="Get started by creating a new Organization"
 				buttonContent="Create Organization"
 				onClick={createOrganizationModel}
-				feature={Features.CRETAE_ORG}
+				feature={Features.CREATE_ORG}
 			/>
 		);
 	} else if (!searchText && (!organizationsList || organizationsList.length === 0)) {
@@ -231,7 +231,7 @@ const OrganizationsList = () => {
 				description="Get started by creating a new Organization"
 				buttonContent="Create Organization"
 				onClick={createOrganizationModel}
-				feature={Features.CRETAE_ORG}
+				feature={Features.CREATE_ORG}
 				svgComponent={
 					<svg
 						className="pr-2 mr-1"
@@ -250,7 +250,7 @@ const OrganizationsList = () => {
 			/>
 		);
 	}
-	
+
 
 	return (
 		<div className="px-4 pt-2">
@@ -263,12 +263,12 @@ const OrganizationsList = () => {
 					Organizations
 				</h1>
 				<div className="ml-auto">
-					<SearchInput onInputChange={searchInputChange} value={searchText}/>
+					<SearchInput onInputChange={searchInputChange} value={searchText} />
 				</div>
 				<RoleViewButton
 					disabled={currentPage.totalCount >= 10}
 					buttonTitle="Create"
-					feature={Features.CRETAE_ORG}
+					feature={Features.CREATE_ORG}
 					svgComponent={
 						<div className="pr-3">
 							<svg

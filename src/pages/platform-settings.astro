@@ -7,20 +7,23 @@ import { apiRoutes } from '../config/apiRoutes';
 import { envConfig } from '../config/envConfig';
 import { pathRoutes } from '../config/pathRoutes';
 import API from '../config/ssrApiConfig';
-import { checkUserSession } from '../utils/check-session';
+import { checkUserSession } from '../utils/check-session-feature';
 import ErrorNotFound from '../modules/ErrorNotFound.astro';
 
-const role = getFromCookies(Astro.cookies, "role")
-const response = await checkUserSession({
-	cookies: Astro.cookies,
-	currentPath: Astro.url.pathname,
-});
-const route: string = pathRoutes.auth.sinIn;
+export const prerender = false;
+
+const response = await checkUserSession(Astro.request, Astro.url.pathname);
 if (!response.authorized) {
 	return Astro.redirect(response.redirect);
 }
 
 const token = getFromCookies(Astro.cookies, 'session');
+if (!token) {
+	return Astro.redirect(pathRoutes.auth.sinIn);
+}
+
+const role = getFromCookies(Astro.cookies, "role");
+
 const fetchPlatformAddminSetting = await API({
 	url: `${apiRoutes.users.platformSettings}`,
 	token,

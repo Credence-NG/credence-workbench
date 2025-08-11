@@ -1,0 +1,9 @@
+tunnel: e6143d2a-d8f3-4aba-a98a-45f8548a6899
+credentials-file: /etc/cloudflared/e6143d2a-d8f3-4aba-a98a-45f8548a6899.json
+
+ingress:
+  # Frontend application - Studio UI
+  - hostname: studio.confamd.com
+    service: http://localhost:3000
+  # Catch-all rule
+  - service: http_status:404

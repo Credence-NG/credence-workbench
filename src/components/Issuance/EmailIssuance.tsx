@@ -41,7 +41,7 @@ const EmailIssuance = () => {
 		allSearch: '',
 	});
 	const [credentialSelected, setCredentialSelected] = useState<ICredentials | null>(
-		
+
 	);
 	const [openModal, setOpenModal] = useState<boolean>(false);
 	const [batchName, setBatchName] = useState('');
@@ -53,7 +53,7 @@ const EmailIssuance = () => {
 	const [issueLoader, setIssueLoader] = useState(false);
 	const inputRef = useRef(null);
 	const [mounted, setMounted] = useState<boolean>(false)
-	const [schemaType, setSchemaType]= useState<SchemaTypes>();
+	const [schemaType, setSchemaType] = useState<SchemaTypes>();
 	const [credentialType, setCredentialType] = useState<CredentialType>();
 	const [credDefId, setCredDefId] = useState<string>();
 	const [schemasIdentifier, setSchemasIdentifier] = useState<string>();
@@ -62,7 +62,7 @@ const EmailIssuance = () => {
 	const [searchValue, setSearchValue] = useState('');
 
 	const handleInputChange = (inputValue: string) => {
-		setSearchValue(inputValue); 
+		setSearchValue(inputValue);
 		setSchemaListAPIParameter(prevParams => {
 			const updatedParams = {
 				...prevParams,
@@ -72,7 +72,7 @@ const EmailIssuance = () => {
 			return updatedParams;
 		});
 	};
-		
+
 	const getSchemaCredentials = async (schemaListAPIParameter: GetAllSchemaListParameter) => {
 
 		try {
@@ -107,8 +107,8 @@ const EmailIssuance = () => {
 			let options;
 
 			//FIXME:  Logic of API call as per schema selection
-			if((currentSchemaType === SchemaTypes.schema_INDY && orgId 
-			 ) || (currentSchemaType ===SchemaTypes.schema_W3C && isAllSchemaFlagSelected === false)){
+			if ((currentSchemaType === SchemaTypes.schema_INDY && orgId
+			) || (currentSchemaType === SchemaTypes.schema_W3C && isAllSchemaFlagSelected === false)) {
 				const response = await getSchemaCredDef(currentSchemaType);
 				const { data } = response as AxiosResponse;
 				if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
@@ -142,7 +142,7 @@ const EmailIssuance = () => {
 				}
 				setLoading(false);
 			}
-			
+
 			//FIXME:  Logic of API call as per schema selection
 			else if ((currentSchemaType === SchemaTypes.schema_W3C) && (orgId) && (allSchemaSelectedFlag)) {
 				const response = await getAllSchemas(schemaListAPIParameter, currentSchemaType);
@@ -196,97 +196,97 @@ const EmailIssuance = () => {
 	};
 
 
-				useEffect(() => {
-						
-					setMounted(true);
-				}, []);
+	useEffect(() => {
 
-				useEffect(() => {
-					if (isEditing && inputRef.current) {
-						inputRef.current.focus();
-					}
-				}, [isEditing]);
+		setMounted(true);
+	}, []);
 
-				useEffect(() => {
-					getSchemaCredentials(schemaListAPIParameter);
-				}, [isAllSchemaFlagSelected]);
+	useEffect(() => {
+		if (isEditing && inputRef.current) {
+			inputRef.current.focus();
+		}
+	}, [isEditing]);
+
+	useEffect(() => {
+		getSchemaCredentials(schemaListAPIParameter);
+	}, [isAllSchemaFlagSelected]);
 
 	const confirmOOBCredentialIssuance = async () => {
 		setIssueLoader(true);
-		
+
 		const existingData = userData;
-		
+
 		const organizationDid = await getFromLocalStorage(storageKeys.ORG_DID);
-		
-	let transformedData: ITransformedData = { credentialOffer: [] };
 
-	if (existingData && existingData.formData) {
-		if (schemaType === SchemaTypes.schema_INDY) {
-			existingData.formData.forEach((entry: { email: string; attributes: IIssueAttributes[] }) => {
-				
-				const transformedEntry = { emailId: entry.email, attributes: [] };
-				entry.attributes.forEach((attribute) => {
-					const transformedAttribute = {
-						value: String(attribute.value || ''),
-						name: attribute.name || '',
-						isRequired: attribute.isRequired,
-					};
-					transformedEntry.attributes.push(transformedAttribute);
+		let transformedData: ITransformedData = { credentialOffer: [] };
+
+		if (existingData && existingData.formData) {
+			if (schemaType === SchemaTypes.schema_INDY) {
+				existingData.formData.forEach((entry: { email: string; attributes: IIssueAttributes[] }) => {
+
+					const transformedEntry = { emailId: entry.email, attributes: [] };
+					entry.attributes.forEach((attribute) => {
+						const transformedAttribute = {
+							value: String(attribute.value || ''),
+							name: attribute.name || '',
+							isRequired: attribute.isRequired,
+						};
+						transformedEntry.attributes.push(transformedAttribute);
+					});
+					transformedData.credentialOffer.push(transformedEntry);
 				});
-				transformedData.credentialOffer.push(transformedEntry);
-			});
-			transformedData.credentialDefinitionId = credDefId;
-			transformedData.isReuseConnection = true;
+				transformedData.credentialDefinitionId = credDefId;
+				transformedData.isReuseConnection = true;
 
-    } else if (schemaType=== SchemaTypes.schema_W3C) {
-		
-        existingData.formData.forEach((entry: { email: string; credentialData: IEmailCredentialData; attributes:IIssueAttributes[] }) => {
-			const credentialOffer = {
-				emailId: entry.email,
-                credential: {
-					"@context": [
-						CREDENTIAL_CONTEXT_VALUE,
-                        schemasIdentifier
-                    ],
-                    "type": [
-						"VerifiableCredential",
-                        credentialSelected?.schemaName
-                    ],
-                    "issuer": {
-						"id": organizationDid 
-                    },
-                    "issuanceDate": new Date().toISOString(),
-					
-                //FIXME: Logic for passing default value as 0 for empty value of number dataType attributes.
-				credentialSubject: entry?.attributes?.reduce((acc, attr) => {
-					if (attr.schemaDataType === 'number' && (attr.value === '' || attr.value === null)) {
-						acc[attr.name] = 0;
-					} else if (attr.schemaDataType === 'string' && attr.value === '') {
-						acc[attr.name] = '';
-					} else if (attr.value !== null) {
-						acc[attr.name] = attr.value;
-					}
-					return acc;
-				}, {}),
-			},
-                options: {
-                    proofType: schemaTypeValue===SchemaTypeValue.POLYGON ? ProofType.polygon : ProofType.no_ledger,
-                    proofPurpose: proofPurpose
-                }
-            };
+			} else if (schemaType === SchemaTypes.schema_W3C) {
 
-            transformedData.credentialOffer.push(credentialOffer);
-        });
+				existingData.formData.forEach((entry: { email: string; credentialData: IEmailCredentialData; attributes: IIssueAttributes[] }) => {
+					const credentialOffer = {
+						emailId: entry.email,
+						credential: {
+							"@context": [
+								CREDENTIAL_CONTEXT_VALUE,
+								schemasIdentifier
+							],
+							"type": [
+								"VerifiableCredential",
+								credentialSelected?.schemaName
+							],
+							"issuer": {
+								"id": organizationDid
+							},
+							"issuanceDate": new Date().toISOString(),
 
-        transformedData.protocolVersion = "v2";
-		transformedData.isReuseConnection = true;
-        transformedData.credentialType = CredentialType.JSONLD;
-    }
-	
+							//FIXME: Logic for passing default value as 0 for empty value of number dataType attributes.
+							credentialSubject: entry?.attributes?.reduce((acc, attr) => {
+								if (attr.schemaDataType === 'number' && (attr.value === '' || attr.value === null)) {
+									acc[attr.name] = 0;
+								} else if (attr.schemaDataType === 'string' && attr.value === '') {
+									acc[attr.name] = '';
+								} else if (attr.value !== null) {
+									acc[attr.name] = attr.value;
+								}
+								return acc;
+							}, {}),
+						},
+						options: {
+							proofType: schemaTypeValue === SchemaTypeValue.POLYGON ? ProofType.polygon : ProofType.no_ledger,
+							proofPurpose: proofPurpose
+						}
+					};
 
-			const transformedJson = JSON.stringify(transformedData, null, 2);	
+					transformedData.credentialOffer.push(credentialOffer);
+				});
+
+				transformedData.protocolVersion = "v2";
+				transformedData.isReuseConnection = true;
+				transformedData.credentialType = CredentialType.JSONLD;
+			}
+
+
+			const transformedJson = JSON.stringify(transformedData, null, 2);
 			const response = await issueOobEmailCredential(transformedJson, credentialType);
-			const { data } = response as AxiosResponse;			
+			const { data } = response as AxiosResponse;
 
 			if (data?.statusCode === apiStatusCodes.API_STATUS_CREATED) {
 				if (data?.data) {
@@ -301,7 +301,7 @@ const EmailIssuance = () => {
 					setTimeout(() => {
 						window.location.href = pathRoutes?.organizations?.issuedCredentials;
 					}, 500);
-				} else {					
+				} else {
 					setFailure(data?.message);
 					setLoading(false);
 					setIssueLoader(false);
@@ -336,7 +336,7 @@ const EmailIssuance = () => {
 	}, [attributes]);
 
 	const isCredSelected = Boolean(credentialSelected);
-	
+
 	const selectInputRef = React.useRef<SelectRef | null>(null);
 
 	const handleReset = () => {
@@ -363,11 +363,11 @@ const EmailIssuance = () => {
 		setOpenResetModal(true);
 	};
 
-	const createSchemaTitle =  { title: 'Create Schema', svg: <Create /> };
+	const createSchemaTitle = { title: 'Create Schema', svg: <Create /> };
 
 	return (
 		<div className="px-4 pt-2">
-			 <div className="col-span-full mb-3">
+			<div className="col-span-full mb-3">
 				<div className="flex justify-between items-center">
 					<BreadCrumbs />
 					<BackButton path={pathRoutes.organizations.Issuance.issue} />
@@ -390,7 +390,7 @@ const EmailIssuance = () => {
 					</div>
 					<RoleViewButton
 						buttonTitle={createSchemaTitle.title}
-						feature={Features.CRETAE_SCHEMA}
+						feature={Features.CREATE_SCHEMA}
 						svgComponent={createSchemaTitle.svg}
 						onClickEvent={() => {
 							window.location.href = `${pathRoutes.organizations.createSchema}`;
@@ -409,59 +409,59 @@ const EmailIssuance = () => {
 										{
 											mounted ?
 
-										<CustomSelect
-											credentialOptions={credentialOptions}
-											handleInputChange={handleInputChange}
-											handleSelectChange={handleSelectChange}
-											searchValue={searchValue}
-											selectInputRef={selectInputRef}
-										/>
-										:
-										null
+												<CustomSelect
+													credentialOptions={credentialOptions}
+													handleInputChange={handleInputChange}
+													handleSelectChange={handleSelectChange}
+													searchValue={searchValue}
+													selectInputRef={selectInputRef}
+												/>
+												:
+												null
 										}
 									</div>
 									<div className="mt-4">
-										{credentialSelected  &&  
-										
-										(	
-											<Card className="max-w-[30rem]">
-												<div>
-													<p className="text-black dark:text-white pb-2">
-														<span className="font-semibold">Schema: </span>
-														{credentialSelected?.schemaName || ''}{' '}
-														<span>[{credentialSelected?.schemaVersion}]</span>
-													</p>
-													{
-														schemaType === SchemaTypes.schema_INDY && 
+										{credentialSelected &&
 
-													<p className="text-black dark:text-white pb-2">
-														{' '}
-														<span className="font-semibold">
-															Credential Definition:
-														</span>{' '}
-														{credentialSelected?.credentialDefinition}
-													</p>
-													}
-													<span className="text-black dark:text-white font-semibold">
-														Attributes:
-													</span>
-													
-													<div className="flex flex-wrap overflow-hidden">
+											(
+												<Card className="max-w-[30rem]">
+													<div>
+														<p className="text-black dark:text-white pb-2">
+															<span className="font-semibold">Schema: </span>
+															{credentialSelected?.schemaName || ''}{' '}
+															<span>[{credentialSelected?.schemaVersion}]</span>
+														</p>
 														{
-															attributes?.map((element: IAttributes) => (
-																<div key={element.attributeName} className="truncate">
-																	<span className="m-1 bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-																		{element.attributeName}
-																	</span>
-																</div>
-															))
+															schemaType === SchemaTypes.schema_INDY &&
+
+															<p className="text-black dark:text-white pb-2">
+																{' '}
+																<span className="font-semibold">
+																	Credential Definition:
+																</span>{' '}
+																{credentialSelected?.credentialDefinition}
+															</p>
 														}
+														<span className="text-black dark:text-white font-semibold">
+															Attributes:
+														</span>
+
+														<div className="flex flex-wrap overflow-hidden">
+															{
+																attributes?.map((element: IAttributes) => (
+																	<div key={element.attributeName} className="truncate">
+																		<span className="m-1 bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+																			{element.attributeName}
+																		</span>
+																	</div>
+																))
+															}
+														</div>
 													</div>
-												</div>
-											</Card>
-										)}
-                    
-                          
+												</Card>
+											)}
+
+
 									</div>
 								</div>
 							</div>
@@ -504,8 +504,8 @@ const EmailIssuance = () => {
 																					Yup.object().shape({
 																						value: value.isRequired
 																							? Yup.string().required(
-																									'This field is required',
-																							  )
+																								'This field is required',
+																							)
 																							: Yup.string(),
 																					}),
 																				),
@@ -520,10 +520,10 @@ const EmailIssuance = () => {
 																	setUserData(values);
 																	handleOpenConfirmation();
 																}}
-															 >
+															>
 																{(formikHandlers): JSX.Element => (
-																	<Form 
-																	onSubmit={formikHandlers.handleSubmit}
+																	<Form
+																		onSubmit={formikHandlers.handleSubmit}
 																	>
 																		<FieldArray
 																			name="formData"
@@ -574,7 +574,7 @@ const EmailIssuance = () => {
 																															}
 																															type="email"
 																															className="w-full md:w-5/12 bg-gray-50 border border-gray-300 text-gray-900 sm:text-md rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-																														 />
+																														/>
 																														<div className="absolute top-11 left-24">
 																															{formikHandlers
 																																?.touched
@@ -614,47 +614,47 @@ const EmailIssuance = () => {
 																													{arrayHelpers.form
 																														.values.formData
 																														.length > 1 && (
-																														<div
-																															key={index}
-																															className="sm:w-2/12 text-red-600 flex justify-end"
-																														>
-																															<Button
-																																data-testid="deleteBtn"
-																																type="button"
-																																color="danger"
-																																onClick={() =>
-																																	arrayHelpers.remove(
-																																		index,
-																																	)
-																																}
-																																disabled={
-																																	arrayHelpers
-																																		.form.values
-																																		.formData
-																																		.length ===
-																																	1
-																																}
-																																className={` dark:bg-gray-700 flex justify-end focus:ring-0`}
+																															<div
+																																key={index}
+																																className="sm:w-2/12 text-red-600 flex justify-end"
 																															>
-																																<svg
-																																	xmlns="http://www.w3.org/2000/svg"
-																																	fill="none"
-																																	viewBox="0 0 24 24"
-																																	strokeWidth={
-																																		1.5
+																																<Button
+																																	data-testid="deleteBtn"
+																																	type="button"
+																																	color="danger"
+																																	onClick={() =>
+																																		arrayHelpers.remove(
+																																			index,
+																																		)
 																																	}
-																																	stroke="currentColor"
-																																	className="w-6 h-6"
+																																	disabled={
+																																		arrayHelpers
+																																			.form.values
+																																			.formData
+																																			.length ===
+																																		1
+																																	}
+																																	className={` dark:bg-gray-700 flex justify-end focus:ring-0`}
 																																>
-																																	<path
-																																		strokeLinecap="round"
-																																		strokeLinejoin="round"
-																																		d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-																																	/>
-																																</svg>
-																															</Button>
-																														</div>
-																													)}
+																																	<svg
+																																		xmlns="http://www.w3.org/2000/svg"
+																																		fill="none"
+																																		viewBox="0 0 24 24"
+																																		strokeWidth={
+																																			1.5
+																																		}
+																																		stroke="currentColor"
+																																		className="w-6 h-6"
+																																	>
+																																		<path
+																																			strokeLinecap="round"
+																																			strokeLinejoin="round"
+																																			d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+																																		/>
+																																	</svg>
+																																</Button>
+																															</div>
+																														)}
 																												</div>
 
 																												<label className="w-20 font-semibold text-base dark:text-white">
@@ -670,24 +670,24 @@ const EmailIssuance = () => {
 																																item: {
 																																	isRequired: boolean;
 																																	displayName:
-																																		| ReactNode
-																																		| string;
+																																	| ReactNode
+																																	| string;
 																																	attributeName:
-																																		| ReactNode
-																																		| string;
+																																	| ReactNode
+																																	| string;
 																																	name:
+																																	| string
+																																	| number
+																																	| boolean
+																																	| React.ReactElement<
+																																		any,
 																																		| string
-																																		| number
-																																		| boolean
-																																		| React.ReactElement<
-																																				any,
-																																				| string
-																																				| React.JSXElementConstructor<any>
-																																		  >
-																																		| Iterable<React.ReactNode>
-																																		| React.ReactPortal
-																																		| null
-																																		| undefined;
+																																		| React.JSXElementConstructor<any>
+																																	>
+																																	| Iterable<React.ReactNode>
+																																	| React.ReactPortal
+																																	| null
+																																	| undefined;
 																																	schemaDataType: any;
 																																},
 																																attIndex: number,
@@ -954,7 +954,7 @@ const EmailIssuance = () => {
 						</Card>
 					</div>
 				</div>
-			</div> 
+			</div>
 		</div>
 	);
 };

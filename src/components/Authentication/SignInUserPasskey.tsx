@@ -6,7 +6,7 @@ import {
 	loginUser,
 	setToLocalStorage,
 } from '../../api/Auth';
-import type {UserSignInData} from '../../api/Auth';
+import type { UserSignInData } from '../../api/Auth';
 import { apiStatusCodes, storageKeys } from '../../config/CommonConstant';
 import {
 	generateAuthenticationOption,
@@ -34,7 +34,7 @@ const SignInUserPasskey = (signInUserProps: signInUserProps) => {
 	const [fidoUserError, setFidoUserError] = useState('');
 	const [failure, setFailure] = useState<string | null>(null);
 	const [success, setSuccess] = useState<string | null>(null);
-    const [isDevice, setIsDevice] = useState<boolean>(false);
+	const [isDevice, setIsDevice] = useState<boolean>(false);
 
 	const handleSvgClick = () => {
 		window.history.pushState(null, '', pathRoutes.auth.sinIn);
@@ -47,11 +47,11 @@ const SignInUserPasskey = (signInUserProps: signInUserProps) => {
 	};
 
 	useEffect(() => {
-        const platform = navigator.platform.toLowerCase();
-        if (platform.includes(Devices.Linux)) {
-            setIsDevice(true);
-        }
-    }, []);
+		const platform = navigator.platform.toLowerCase();
+		if (platform.includes(Devices.Linux)) {
+			setIsDevice(true);
+		}
+	}, []);
 
 
 	const verifyAuthenticationMethod = async (
@@ -72,27 +72,70 @@ const SignInUserPasskey = (signInUserProps: signInUserProps) => {
 		const userEmail = await getFromLocalStorage(storageKeys.LOGIN_USER_EMAIL)
 
 		const { data } = userDetails as AxiosResponse;
+
 		if (data?.data?.userOrgRoles?.length > 0) {
-			const role = data?.data?.userOrgRoles.find((item: { orgRole: { name: PlatformRoles; }; }) => item.orgRole.name === PlatformRoles.platformAdmin)
-			const permissionArray: number | string[] = [];
+			// Check if user is platform admin
+			const platformAdminRole = data?.data?.userOrgRoles.find(
+				(item: { orgRole: { name: string } }) => {
+					return item.orgRole.name === PlatformRoles.platformAdmin;
+				}
+			);
+
+			const permissionArray: string[] = [];
 			data?.data?.userOrgRoles?.forEach(
 				(element: { orgRole: { name: string } }) =>
 					permissionArray.push(element?.orgRole?.name),
 			);
-			const { id, 
-				profileImg, 
-				firstName, 
-				email, 
-			} = data?.data || {}
+
+			const { id, profileImg, firstName, email } = data?.data || {}
 			const userProfile = {
-				id, profileImg, firstName, email, 
-				
+				id, profileImg, firstName, email
 			}
 			await setToLocalStorage(storageKeys.PERMISSIONS, permissionArray);
 			await setToLocalStorage(storageKeys.USER_PROFILE, userProfile);
 			await setToLocalStorage(storageKeys.USER_EMAIL, data?.data?.email);
-			return {
-				role: role?.orgRole || ""
+
+			// Store all user roles including platform admin
+			await setToLocalStorage(storageKeys.USER_ROLES, permissionArray.join(','));
+
+			// Store organization data for dashboard functionality
+			// Platform admin users also need org context to access dashboard features
+			if (data?.data?.userOrgRoles?.length > 0) {
+				// Get organization roles (excluding platform_admin for org context)
+				const orgRoles = data?.data?.userOrgRoles
+					.filter((item: { orgRole: { name: string } }) =>
+						item.orgRole.name !== PlatformRoles.platformAdmin)
+					.map((item: { orgRole: { name: string } }) => item.orgRole.name);
+
+				// Store organization roles and org ID for dashboard access
+				if (orgRoles.length > 0) {
+					await setToLocalStorage(storageKeys.ORG_ROLES, orgRoles.join(','));
+
+					// Get the first organization ID for context
+					const firstOrgRole = data?.data?.userOrgRoles.find(
+						(item: { orgRole: { name: string } }) =>
+							item.orgRole.name !== PlatformRoles.platformAdmin
+					);
+
+					if (firstOrgRole?.orgId) {
+						await setToLocalStorage(storageKeys.ORG_ID, firstOrgRole.orgId);
+					}
+				}
+			}
+
+			// Return the appropriate role for redirect logic
+			if (platformAdminRole) {
+				// User is platform admin - return platform_admin role
+				return {
+					role: platformAdminRole.orgRole,
+				};
+			} else {
+				// User has organization roles (member, issuer, verifier, admin, owner)
+				// Return the first organization role (any role works for dashboard routing)
+				const firstRole = data?.data?.userOrgRoles[0]?.orgRole;
+				return {
+					role: firstRole,
+				};
 			}
 		} else {
 			setFailure(userDetails as string);
@@ -153,7 +196,8 @@ const SignInUserPasskey = (signInUserProps: signInUserProps) => {
 						}
 					}
 
-					const response = await fetch('/api/auth/signin', {
+					// Set cookies via API but don't rely on API redirect due to middleware interference
+					await fetch('/api/auth/signin', {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',
@@ -161,7 +205,11 @@ const SignInUserPasskey = (signInUserProps: signInUserProps) => {
 						body: JSON.stringify(userPayload),
 					});
 
-					window.location.href = userRole?.role?.name === PlatformRoles.platformAdmin ? pathRoutes.users.platformSetting : pathRoutes.users.dashboard
+					// Always do client-side redirect instead of relying on API redirect
+					// because middleware intercepts 302 responses and redirects back to sign-in
+					// Platform admin gets dashboard as entry page, can access platform-settings from there
+					const redirectUrl = pathRoutes.users.dashboard;
+					window.location.href = redirectUrl;
 				} else if (data?.error) {
 				}
 			} else {
@@ -333,7 +381,7 @@ const SignInUserPasskey = (signInUserProps: signInUserProps) => {
 										}}
 										className="px-10 min-w-fit sm:min-w-[12rem] font-medium text-center text-white bg-primary-700 hover:!bg-primary-800 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
 									>
-										
+
 										<svg
 											xmlns="http://www.w3.org/2000/svg"
 											width="21"
@@ -360,8 +408,8 @@ const SignInUserPasskey = (signInUserProps: signInUserProps) => {
 										<span className="ml-2">Passkey</span>
 									</Button>
 									{isDevice && (
-                                    <PasskeyAlert />
-                                )}
+										<PasskeyAlert />
+									)}
 									<a
 										id="navigatetosignup"
 										href="/authentication/sign-up"

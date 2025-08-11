@@ -2,10 +2,11 @@
 import LayoutSidebar from '../app/LayoutSidebar.astro';
 import UserDashBoard from '../components/User/UserDashBoard';
 import { pathRoutes } from '../config/pathRoutes';
-import { checkUserSession } from '../utils/check-session';
+import { checkUserSession } from '../utils/check-session-feature';
 
-const response = await checkUserSession({cookies: Astro.cookies, currentPath: Astro.url.pathname});
-const route: string = pathRoutes.auth.sinIn
+export const prerender = false;
+
+const response = await checkUserSession(Astro.request, Astro.url.pathname);
 if (!response.authorized) {
 	return Astro.redirect(response.redirect);
 }

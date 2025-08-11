@@ -26,15 +26,15 @@ import { getAllSchemas } from '../../api/Schema';
 import CustomSelect from '../../commonComponents/CustomSelect';
 
 export interface SelectRef {
-  clearValue(): void;
+	clearValue(): void;
 }
 const BulkIssuance = () => {
 	const [csvData, setCsvData] = useState<string[][]>([]);
 	const [requestId, setRequestId] = useState("");
 	const [process, setProcess] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(true);
-	const [ credentialOptionsData,  setCredentialOptionsData] = useState([]);
-	const [credentialSelected, setCredentialSelected] = useState<ICredentials | null>();	
+	const [credentialOptionsData, setCredentialOptionsData] = useState([]);
+	const [credentialSelected, setCredentialSelected] = useState<ICredentials | null>();
 	const [isFileUploaded, setIsFileUploaded] = useState(false);
 	const [uploadedFileName, setUploadedFileName] = useState('');
 	const [uploadedFile, setUploadedFile] = useState(null);
@@ -44,7 +44,7 @@ const BulkIssuance = () => {
 	const [success, setSuccess] = useState<string | null>(null);
 	const [failure, setFailure] = useState<string | null>(null);
 	const [mounted, setMounted] = useState<boolean>(false)
-	const [schemaType, setSchemaType]= useState<SchemaTypes>();
+	const [schemaType, setSchemaType] = useState<SchemaTypes>();
 	const [selectedTemplate, setSelectedTemplate] = useState<any>();
 	const [isAllSchema, setIsAllSchema] = useState<boolean>();
 	const [attributes, setAttributes] = useState<IAttributes[]>([]);
@@ -74,7 +74,7 @@ const BulkIssuance = () => {
 	const [searchValue, setSearchValue] = useState('');
 
 	const onInputChange = (inputValue: string) => {
-		setSearchValue(inputValue); 
+		setSearchValue(inputValue);
 		setSchemaListAPIParameters(prevParams => {
 			const updatedParams = {
 				...prevParams,
@@ -93,15 +93,15 @@ const BulkIssuance = () => {
 			const orgDid = await getFromLocalStorage(storageKeys.ORG_DID);
 
 			const isAllSchemaSelectedFlag = await getFromLocalStorage(storageKeys.ALL_SCHEMAS)
-			if(isAllSchemaSelectedFlag === `false` || !isAllSchemaSelectedFlag){
+			if (isAllSchemaSelectedFlag === `false` || !isAllSchemaSelectedFlag) {
 				setIsAllSchema(false)
 			}
-			else if(isAllSchemaSelectedFlag ==='true'){
+			else if (isAllSchemaSelectedFlag === 'true') {
 				setIsAllSchema(true)
 			}
-		
+
 			let currentSchemaType = schemaType;
-	
+
 			if (orgDid?.includes(DidMethod.POLYGON) || orgDid?.includes(DidMethod.KEY) || orgDid?.includes(DidMethod.WEB)) {
 				currentSchemaType = SchemaTypes.schema_W3C;
 			} else if (orgDid?.includes(DidMethod.INDY)) {
@@ -109,15 +109,15 @@ const BulkIssuance = () => {
 			}
 
 			let dropDownOptions;
-			setSchemaType(currentSchemaType); 
-			if ((currentSchemaType === SchemaTypes.schema_INDY &&  isAllSchema) || (currentSchemaType && orgId && !isAllSchema)) {
-				const response = await getSchemaCredDef(currentSchemaType); 
+			setSchemaType(currentSchemaType);
+			if ((currentSchemaType === SchemaTypes.schema_INDY && isAllSchema) || (currentSchemaType && orgId && !isAllSchema)) {
+				const response = await getSchemaCredDef(currentSchemaType);
 				const { data } = response as AxiosResponse;
 
 				if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
-					const { data:  credentialDefsData } = data;
+					const { data: credentialDefsData } = data;
 
-					dropDownOptions =  credentialDefsData.map(
+					dropDownOptions = credentialDefsData.map(
 						({
 							schemaName,
 							schemaVersion,
@@ -126,20 +126,20 @@ const BulkIssuance = () => {
 							schemaIdentifier,
 							schemaAttributes
 						}: ICredentials) => ({
-							value: schemaType===SchemaTypes.schema_INDY ? credentialDefinitionId : schemaVersion,
+							value: schemaType === SchemaTypes.schema_INDY ? credentialDefinitionId : schemaVersion,
 							label: `${schemaName} [${schemaVersion}]${currentSchemaType === SchemaTypes.schema_INDY ? ` - (${credentialDefinition})` : ''}`,
 							schemaName: schemaName,
 							schemaVersion: schemaVersion,
 							credentialDefinition: credentialDefinition,
-		                    credentialDefinitionId: credentialDefinitionId,
+							credentialDefinitionId: credentialDefinitionId,
 							schemaIdentifier: schemaIdentifier,
 							schemaAttributes: schemaAttributes && typeof schemaAttributes === "string" && JSON.parse(schemaAttributes)
 						}),
 					);
-					
-					 setCredentialOptionsData(dropDownOptions);
+
+					setCredentialOptionsData(dropDownOptions);
 				} else {
-					setUploadMessage({message: response as string, type: "failure"});
+					setUploadMessage({ message: response as string, type: "failure" });
 					setSuccess(null)
 					setFailure(null)
 				}
@@ -147,33 +147,33 @@ const BulkIssuance = () => {
 			}
 			else if (currentSchemaType === SchemaTypes.schema_W3C && orgId && isAllSchema) {
 
-				
-				const response = await getAllSchemas(schemaListAPIParameters,currentSchemaType); 
-					const { data } = response as AxiosResponse;
-					
 
-					if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
-						const  credentialDefsData = data.data.data;
-						
+				const response = await getAllSchemas(schemaListAPIParameters, currentSchemaType);
+				const { data } = response as AxiosResponse;
 
-						dropDownOptions =  credentialDefsData.map(({
-							name,
-							version,
-							schemaLedgerId,
-							attributes,
-							type
-						} : ICredentials) => ({
-							value:  version,
-							label: `${name} [${version}]`,
-							schemaName: name,
-							type:type,
-							schemaVersion: version,
-							schemaIdentifier: schemaLedgerId,
-							attributes: Array.isArray(attributes) ? attributes : (attributes ? JSON.parse(attributes) : []),
-						}));	
-					 setCredentialOptionsData(dropDownOptions);
+
+				if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
+					const credentialDefsData = data.data.data;
+
+
+					dropDownOptions = credentialDefsData.map(({
+						name,
+						version,
+						schemaLedgerId,
+						attributes,
+						type
+					}: ICredentials) => ({
+						value: version,
+						label: `${name} [${version}]`,
+						schemaName: name,
+						type: type,
+						schemaVersion: version,
+						schemaIdentifier: schemaLedgerId,
+						attributes: Array.isArray(attributes) ? attributes : (attributes ? JSON.parse(attributes) : []),
+					}));
+					setCredentialOptionsData(dropDownOptions);
 				} else {
-					setUploadMessage({message: response as string, type: "failure"});
+					setUploadMessage({ message: response as string, type: "failure" });
 					setSuccess(null)
 					setFailure(null)
 				}
@@ -203,11 +203,11 @@ const BulkIssuance = () => {
 	useEffect(() => {
 		getSchemaCredentials(schemaListAPIParameters);
 	}, [isAllSchema]);
-	useEffect(() => {	
+	useEffect(() => {
 		setMounted(true);
 	}, []);
 
-	
+
 	const downloadFile = (url: string, fileName: string) => {
 		const link = document.createElement('a');
 		link.href = url;
@@ -224,37 +224,37 @@ const BulkIssuance = () => {
 				setProcess(true);
 				const response = await DownloadCsvTemplate(selectedTemplate, schemaType);
 				const { data } = response as AxiosResponse;
-				
+
 				if (data) {
 					const fileUrl = data;
 					if (fileUrl) {
 						downloadFile(fileUrl, 'downloadedFile.csv');
 						setSuccess('File downloaded successfully');
-						setTimeout(()=>{
+						setTimeout(() => {
 							setSuccess(null)
-						},5000)
+						}, 5000)
 						setProcess(false);
 					} else {
-						setUploadMessage({message: 'File URL is missing in the response', type: "failure"});
-						setTimeout(()=>{
+						setUploadMessage({ message: 'File URL is missing in the response', type: "failure" });
+						setTimeout(() => {
 							setUploadMessage(null)
-						},5000)
+						}, 5000)
 						setSuccess(null)
 						setFailure(null)
 					}
 				} else {
-					setUploadMessage({message: 'API request was not successful', type: "failure"});
-					setTimeout(()=>{
+					setUploadMessage({ message: 'API request was not successful', type: "failure" });
+					setTimeout(() => {
 						setUploadMessage(null)
-					},5000)
+					}, 5000)
 					setSuccess(null)
 					setFailure(null)
 				}
 			} catch (error) {
-				setUploadMessage({message: error as string, type: "failure"});
-				setTimeout(()=>{
+				setUploadMessage({ message: error as string, type: "failure" });
+				setTimeout(() => {
 					setUploadMessage(null)
-				},5000)
+				}, 5000)
 				setSuccess(null)
 				setFailure(null)
 			}
@@ -325,10 +325,10 @@ const BulkIssuance = () => {
 		setLoading(true);
 
 		if (file.type !== 'text/csv') {
-			setUploadMessage({message:'Invalid file type. Please select only CSV files.', type: "failure"});
-			setTimeout(()=>{
+			setUploadMessage({ message: 'Invalid file type. Please select only CSV files.', type: "failure" });
+			setTimeout(() => {
 				setUploadMessage(null)
-			},5000)
+			}, 5000)
 			setSuccess(null)
 			setFailure(null)
 			return;
@@ -357,16 +357,16 @@ const BulkIssuance = () => {
 				setLoading(false);
 				setRequestId(data?.data);
 				setIsFileUploaded(true);
-				setUploadMessage({message: data?.message, type: "success"});
-				setTimeout(()=>{
+				setUploadMessage({ message: data?.message, type: "success" });
+				setTimeout(() => {
 					setUploadMessage(null)
-				},5000)
+				}, 5000)
 				await handleCsvFileData(data?.data);
 			} else {
-				setUploadMessage({message: response as string, type: "failure"});
-				setTimeout(()=>{
+				setUploadMessage({ message: response as string, type: "failure" });
+				setTimeout(() => {
 					setUploadMessage(null)
-				},5000)
+				}, 5000)
 				setSuccess(null)
 				setFailure(null)
 			}
@@ -460,13 +460,14 @@ const BulkIssuance = () => {
 	const handleCloseConfirmation = () => {
 		setOpenModal(false);
 	};
-  const selectInputRef = React.useRef<SelectRef | null>(null);
+	const selectInputRef = React.useRef<SelectRef | null>(null);
 
-  const onClear = () => {
+	const onClear = () => {
 		if (selectInputRef.current) {
 			selectInputRef.current.clearValue();
-		}  };
-	
+		}
+	};
+
 	const handleReset = () => {
 		handleDiscardFile();
 		setCredentialSelected(null);
@@ -493,9 +494,9 @@ const BulkIssuance = () => {
 				onClear()
 			} else {
 				setFailure(response as string);
-				setTimeout(()=>{
+				setTimeout(() => {
 					setFailure(null)
-				},5000)
+				}, 5000)
 				setLoading(false);
 			}
 		} else {
@@ -509,14 +510,14 @@ const BulkIssuance = () => {
 
 	const isCredSelected = Boolean(credentialSelected);
 
-	const selectedCred: ICredentials | boolean | undefined =  credentialOptionsData &&  credentialOptionsData.length > 0 &&  credentialOptionsData.find(
+	const selectedCred: ICredentials | boolean | undefined = credentialOptionsData && credentialOptionsData.length > 0 && credentialOptionsData.find(
 		(item: { value: string }) =>
 			item.value &&
 			item.value === credentialSelected,
 	);
-	
-	const createSchemaTitle =  { title: 'Create Schema', svg: <Create/> };
-		
+
+	const createSchemaTitle = { title: 'Create Schema', svg: <Create /> };
+
 	return (
 		<div className="px-4 pt-2">
 			<div className="mb-4 col-span-full xl:mb-2">
@@ -535,37 +536,37 @@ const BulkIssuance = () => {
 						<span className="text-sm text-gray-400">Upload a .CSV file for bulk issuance</span>
 					</div>
 					<div className='flex sm:flex-row flex-col sm:space-x-2 sm:space-y-0 space-y-2  sm:items-center'>
-					<Button
-						color="bg-primary-800"
-						className="flex shrink-0 bg-secondary-700 ring-primary-700 bg-white-700 hover:bg-secondary-700 ring-2 text-primary-600 font-medium rounded-md text-lg px-2 lg:px-3 py-2 lg:py-2.5 ml-auto border-blue-600 hover:text-primary-600 dark:text-white dark:border-blue-500 dark:hover:text-primary-700 dark:hover:bg-secondary-700"
-						style={{ height: '2.2rem', minWidth: '2rem' }}
-						onClick={() => {
-							window.location.href = pathRoutes.organizations.Issuance.history;
-						}}
+						<Button
+							color="bg-primary-800"
+							className="flex shrink-0 bg-secondary-700 ring-primary-700 bg-white-700 hover:bg-secondary-700 ring-2 text-primary-600 font-medium rounded-md text-lg px-2 lg:px-3 py-2 lg:py-2.5 ml-auto border-blue-600 hover:text-primary-600 dark:text-white dark:border-blue-500 dark:hover:text-primary-700 dark:hover:bg-secondary-700"
+							style={{ height: '2.2rem', minWidth: '2rem' }}
+							onClick={() => {
+								window.location.href = pathRoutes.organizations.Issuance.history;
+							}}
 						>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							className="pr-2 shrink-0"
-							width="30"
-							color="text-white"
-							height="18"
-							fill="none"
-							viewBox="0 0 18 18"
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								className="pr-2 shrink-0"
+								width="30"
+								color="text-white"
+								height="18"
+								fill="none"
+								viewBox="0 0 18 18"
 							>
-							<path
-								fill="#4174DD"
-								d="M15.483 18H2.518A2.518 2.518 0 0 1 0 15.482V2.518A2.518 2.518 0 0 1 2.518 0h12.965a2.518 2.518 0 0 1 2.518 2.518v12.964A2.518 2.518 0 0 1 15.483 18ZM2.518 1.007a1.51 1.51 0 0 0-1.51 1.51v12.965a1.51 1.51 0 0 0 1.51 1.51h12.965a1.51 1.51 0 0 0 1.51-1.51V2.518a1.51 1.51 0 0 0-1.51-1.51H2.518Z"
-							/>
-							<path
-								fill="#4174DD"
-								d="M3.507 5.257a.504.504 0 0 1 0-1.007h5.495a.504.504 0 1 1 0 1.007H3.507ZM6.254 9.5a.504.504 0 1 1 0-1.008h5.492a.504.504 0 0 1 0 1.007H6.254ZM9 13.757a.503.503 0 1 1 0-1.007h5.493a.504.504 0 0 1 0 1.007H9Z"
+								<path
+									fill="#4174DD"
+									d="M15.483 18H2.518A2.518 2.518 0 0 1 0 15.482V2.518A2.518 2.518 0 0 1 2.518 0h12.965a2.518 2.518 0 0 1 2.518 2.518v12.964A2.518 2.518 0 0 1 15.483 18ZM2.518 1.007a1.51 1.51 0 0 0-1.51 1.51v12.965a1.51 1.51 0 0 0 1.51 1.51h12.965a1.51 1.51 0 0 0 1.51-1.51V2.518a1.51 1.51 0 0 0-1.51-1.51H2.518Z"
 								/>
-						</svg>
-						View History
-					</Button>
-					<RoleViewButton
+								<path
+									fill="#4174DD"
+									d="M3.507 5.257a.504.504 0 0 1 0-1.007h5.495a.504.504 0 1 1 0 1.007H3.507ZM6.254 9.5a.504.504 0 1 1 0-1.008h5.492a.504.504 0 0 1 0 1.007H6.254ZM9 13.757a.503.503 0 1 1 0-1.007h5.493a.504.504 0 0 1 0 1.007H9Z"
+								/>
+							</svg>
+							View History
+						</Button>
+						<RoleViewButton
 							buttonTitle={createSchemaTitle.title}
-							feature={Features.CRETAE_SCHEMA}
+							feature={Features.CREATE_SCHEMA}
 							svgComponent={createSchemaTitle.svg}
 							onClickEvent={() => {
 								window.location.href = `${pathRoutes.organizations.createSchema}`;
@@ -594,19 +595,19 @@ const BulkIssuance = () => {
 									<div className="search-dropdown text-primary-700 drak:text-primary-700">
 										{
 											mounted ?
-										<CustomSelect
-											credentialOptions={credentialOptionsData}
-											handleInputChange={onInputChange}
-											handleSelectChange={onSelectChange}
-											searchValue={searchValue}
-											selectInputRef={selectInputRef}
-										/>
-										:
-										null
+												<CustomSelect
+													credentialOptions={credentialOptionsData}
+													handleInputChange={onInputChange}
+													handleSelectChange={onSelectChange}
+													searchValue={searchValue}
+													selectInputRef={selectInputRef}
+												/>
+												:
+												null
 										}
 									</div>
 									<div className="mt-4">
-										{credentialSelected &&(
+										{credentialSelected && (
 											<Card className='max-w-[30rem]'>
 												<div>
 													<p className="text-black dark:text-white pb-2">
@@ -615,29 +616,29 @@ const BulkIssuance = () => {
 														<span>[{credentialSelected?.schemaVersion}]</span>
 													</p>
 													{
-														schemaType === SchemaTypes.schema_INDY && 
-													<p className="text-black dark:text-white pb-2">
-														{' '}
-														<span className="font-semibold">
-															Credential Definition:
-														</span>{' '}
-														{credentialSelected?.credentialDefinition}
-													</p>
+														schemaType === SchemaTypes.schema_INDY &&
+														<p className="text-black dark:text-white pb-2">
+															{' '}
+															<span className="font-semibold">
+																Credential Definition:
+															</span>{' '}
+															{credentialSelected?.credentialDefinition}
+														</p>
 													}
 
 													<span className='text-black dark:text-white font-semibold'>Attributes:</span>
 													<div className="flex flex-wrap overflow-hidden">
-													{attributes?.map(
-																	(element: IAttributes) => (
-																		<div key={element.attributeName}>
-																			<span className="m-1 bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-																				{element.attributeName}
-																			</span>
-																		</div>
-																	),
-																)}
+														{attributes?.map(
+															(element: IAttributes) => (
+																<div key={element.attributeName}>
+																	<span className="m-1 bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+																		{element.attributeName}
+																	</span>
+																</div>
+															),
+														)}
 													</div>
-													
+
 												</div>
 											</Card>
 										)}

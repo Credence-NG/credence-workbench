@@ -21,7 +21,7 @@ import SchemaCard from '../../commonComponents/SchemaCard';
 import type { IAttributesDetails, ISchema, ISchemaData } from './interface';
 
 const VerificationSchemasList = ({ routeType }: { routeType: string }) => {
-const [schemasList, setSchemasList] = useState([]);
+	const [schemasList, setSchemasList] = useState([]);
 	const [schemasDetailsErr, setSchemasDetailsErr] = useState<string | null>('');
 	const [loading, setLoading] = useState<boolean>(true);
 	const [allSchemasFlag, setAllSchemasFlag] = useState<boolean>(false);
@@ -42,13 +42,13 @@ const [schemasList, setSchemasList] = useState([]);
 	const [isNoLedger, setIsNoLedger] = useState<boolean>(false);
 	const [schemaType, setSchemaType] = useState('');
 
-		const getSchemaListDetails = async () => {
-	
+	const getSchemaListDetails = async () => {
+
 		try {
 			const organizationId = await getFromLocalStorage(storageKeys.ORG_ID);
 			setLoading(true);
 			let schemasList;
-				if (allSchemasFlag) {
+			if (allSchemasFlag) {
 				schemasList = await getAllSchemas(schemasListParameter, schemaType);
 			} else {
 				schemasList = await getAllSchemasByOrgId(
@@ -91,11 +91,11 @@ const [schemasList, setSchemasList] = useState([]);
 	};
 	const handleFlag = async () => {
 		try {
-		  await setToLocalStorage(storageKeys.VERIFICATION_ROUTE_TYPE, routeType);
+			await setToLocalStorage(storageKeys.VERIFICATION_ROUTE_TYPE, routeType);
 		} catch (error) {
-		  console.error('Error updating localStorage:', error);
+			console.error('Error updating localStorage:', error);
 		}
-	  };
+	};
 
 	useEffect(() => {
 		getSchemaListDetails();
@@ -135,7 +135,7 @@ const [schemasList, setSchemasList] = useState([]);
 			issuerId: issuerId,
 			createdDate: created,
 		};
-	
+
 		if (checked) {
 			setSelectedSchemas((prevSelectedSchemas) => [...prevSelectedSchemas, schemaDetails]);
 		} else {
@@ -232,16 +232,16 @@ const [schemasList, setSchemasList] = useState([]);
 	const handleFilter = async (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const selectedFilter = e.target.value;
 		setAllSchemasFlag(selectedFilter === 'All schemas');
-			
-			setSchemasListParameter((prevParams) => ({
-				...prevParams,
-				page: 1,
-				search: '', 
-				allSearch: '', 	  
-			}));
-			setSearchValue(''); 
 
-	};	
+		setSchemasListParameter((prevParams) => ({
+			...prevParams,
+			page: 1,
+			search: '',
+			allSearch: '',
+		}));
+		setSearchValue('');
+
+	};
 	useEffect(() => {
 		handleFlag();
 		fetchOrganizationDetails();
@@ -297,7 +297,7 @@ const [schemasList, setSchemasList] = useState([]);
 								<RoleViewButton
 									title={createSchemaButtonTitle.toolTip}
 									buttonTitle={createSchemaButtonTitle.title}
-									feature={Features.CRETAE_SCHEMA}
+									feature={Features.CREATE_SCHEMA}
 									svgComponent={createSchemaButtonTitle.svg}
 									onClickEvent={() => {
 										window.location.href = `${pathRoutes.organizations.createSchema}`;
@@ -306,7 +306,7 @@ const [schemasList, setSchemasList] = useState([]);
 							) : (
 								<RoleViewButton
 									buttonTitle={createSchemaButtonTitle.title}
-									feature={Features.CRETAE_SCHEMA}
+									feature={Features.CREATE_SCHEMA}
 									svgComponent={createSchemaButtonTitle.svg}
 									onClickEvent={() => {
 										window.location.href = `${pathRoutes.organizations.dashboard}`;
@@ -334,7 +334,7 @@ const [schemasList, setSchemasList] = useState([]);
 								schemasList.map((element) => (
 									<div className="px-0 sm:px-2" key={element['schemaLedgerId']}>
 										<SchemaCard
-										    selectedSchemas={selectedSchemas}
+											selectedSchemas={selectedSchemas}
 											schemaName={element['name']}
 											version={element['version']}
 											schemaId={element['schemaLedgerId']}
@@ -347,16 +347,16 @@ const [schemasList, setSchemasList] = useState([]);
 											noLedger={isNoLedger}
 											isVerificationUsingEmail={true}
 											onChange={(checked) => {
-												w3cSchema 
-													? handleW3cSchemas(checked, element) 
+												w3cSchema
+													? handleW3cSchemas(checked, element)
 													: handleSchemaSelection(
-														  element['schemaLedgerId'], 
-														  element['attributes'], 
-														  element['issuerId'], 
-														  element['createDateTime'], 
-														  checked
-													  );
-											}}										
+														element['schemaLedgerId'],
+														element['attributes'],
+														element['issuerId'],
+														element['createDateTime'],
+														checked
+													);
+											}}
 										/>
 									</div>
 								))}
