@@ -22,6 +22,11 @@ ui.env
 # macOS-specific files
 .DS_Store
 
+# Logging
+logs/*.log
+logs/*.json
+!logs/.gitkeep
+
 # misc.
 .dev*
 

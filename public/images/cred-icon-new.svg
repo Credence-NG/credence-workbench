@@ -1,0 +1,20 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Credential/certificate icon -->
+  <!-- Main credential card -->
+  <rect x="20" y="30" width="80" height="60" rx="8" fill="#374151" fill-opacity="0.9" stroke="#374151" stroke-width="2"/>
+  
+  <!-- Credential ribbon/seal -->
+  <circle cx="85" cy="45" r="12" fill="#374151" fill-opacity="0.8"/>
+  <path d="M85 40 l3 6 l6-1 l-2 6 l5 4 l-6 2 l0 6 l-6-3 l-6 3 l0-6 l-6-2 l5-4 l-2-6 l6 1 z" fill="#374151" fill-opacity="1"/>
+  
+  <!-- Credential content lines -->
+  <rect x="30" y="45" width="35" height="3" rx="1.5" fill="#374151" fill-opacity="0.7"/>
+  <rect x="30" y="52" width="30" height="3" rx="1.5" fill="#374151" fill-opacity="0.7"/>
+  <rect x="30" y="59" width="25" height="3" rx="1.5" fill="#374151" fill-opacity="0.7"/>
+  <rect x="30" y="66" width="40" height="3" rx="1.5" fill="#374151" fill-opacity="0.7"/>
+  
+  <!-- Security/verification elements -->
+  <rect x="25" y="75" width="8" height="8" rx="2" fill="#374151" fill-opacity="0.6"/>
+  <rect x="35" y="75" width="8" height="8" rx="2" fill="#374151" fill-opacity="0.6"/>
+  <rect x="45" y="75" width="8" height="8" rx="2" fill="#374151" fill-opacity="0.6"/>
+</svg>

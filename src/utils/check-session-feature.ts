@@ -3,17 +3,47 @@ import { pathRoutes } from "../config/pathRoutes";
 import { apiStatusCodes } from "../config/CommonConstant";
 import { apiRoutes } from "../config/apiRoutes";
 import { envConfig } from "../config/envConfig";
+import { getFromCookies } from "../api/Auth";
+import pako from "pako";
 import {
   getRequiredFeature,
   getUserEffectiveFeatures,
   checkRouteAccess,
 } from "../config/featureAuth";
+import { TokenRefreshManager } from "./tokenRefreshManager";
 
 interface IOutput {
   permitted: boolean;
   redirect?: string;
   authorized?: boolean;
 }
+
+/**
+ * Helper function to log session check results consistently
+ */
+const logSessionResult = (
+  sessionId: string,
+  result: IOutput,
+  context: string,
+  path: string
+) => {
+  console.log(`🏁 [FeatureSessionCheck] [${sessionId}] ${context}:`, {
+    permitted: result.permitted,
+    authorized: result.authorized,
+    redirect: result.redirect,
+    path: path,
+    context: context,
+    timestamp: new Date().toISOString(),
+  });
+  if (result.redirect) {
+    console.log(
+      `🚪 [FeatureSessionCheck] [${sessionId}] Redirecting to: ${result.redirect}`
+    );
+  }
+  console.log(
+    `🔐 [FeatureSessionCheck] [${sessionId}] ===============================`
+  );
+};
 
 /**
  * Feature-Based Session Checker
@@ -24,9 +54,26 @@ export const checkUserSession = async (
   request: Request,
   currentPath: string
 ): Promise<IOutput> => {
-  console.log("Starting session check for path:", currentPath);
+  const sessionCheckId = Math.random().toString(36).substr(2, 8);
+  console.log(
+    `🔐 [FeatureSessionCheck] [${sessionCheckId}] ===============================`
+  );
+  console.log(
+    `🔐 [FeatureSessionCheck] [${sessionCheckId}] Starting session check for path: ${currentPath}`
+  );
+  console.log(
+    `🔐 [FeatureSessionCheck] [${sessionCheckId}] Request URL: ${request.url}`
+  );
+  console.log(
+    `🔐 [FeatureSessionCheck] [${sessionCheckId}] Has cookies: ${request.headers.has(
+      "cookie"
+    )}`
+  );
+  console.log(
+    `🔐 [FeatureSessionCheck] [${sessionCheckId}] ===============================`
+  );
 
-  // CRITICAL WORKAROUND: Allow all dashboard access with any cookie
+  // CRITICAL WORKAROUND: Allow dashboard access with enhanced registration flow check
   // This is a temporary fix until the API authorization issues are resolved
   if (
     currentPath === pathRoutes.users.dashboard ||
@@ -35,11 +82,222 @@ export const checkUserSession = async (
     console.log("*** DASHBOARD ACCESS EMERGENCY BYPASS ACTIVATED ***");
     // Just check if any cookie exists to avoid completely open access
     const hasCookies = request.headers.has("cookie");
+    console.log("🍪 COOKIE HEADER CHECK:", {
+      hasCookies: hasCookies,
+      cookieHeaderExists: request.headers.has("cookie"),
+    });
+
     if (hasCookies) {
-      console.log("Cookies present, allowing dashboard access");
+      console.log("Cookies present, checking for organization context...");
+
+      // Enhanced Registration Flow: Check if user has organization context
+      const cookieHeader = request.headers.get("cookie");
+      console.log("🔍 RAW COOKIE HEADER BEFORE PARSING:", cookieHeader);
+
+      if (cookieHeader) {
+        const parseCookies = (cookieString: string) => {
+          const cookies: Record<string, string> = {};
+          cookieString.split(";").forEach((cookie) => {
+            const [name, value] = cookie.trim().split("=");
+            if (name && value) {
+              cookies[name] = decodeURIComponent(value);
+            }
+          });
+          return cookies;
+        };
+
+        const cookies = parseCookies(cookieHeader);
+
+        // Properly decompress the session cookie using pako (by design)
+        const sessionCookie = cookies.session;
+        let sessionData: any = {};
+
+        if (sessionCookie) {
+          try {
+            // Decompress the session data using pako (gzip decompression)
+            let decompressedSession = sessionCookie;
+
+            if (sessionCookie.startsWith("gz:")) {
+              console.log(
+                "🗜️ Detected compressed session, decompressing with pako..."
+              );
+              const base64Data = sessionCookie.replace("gz:", "");
+              const compressed = Uint8Array.from(atob(base64Data), (c) =>
+                c.charCodeAt(0)
+              );
+              decompressedSession = pako.inflate(compressed, { to: "string" });
+              console.log(
+                "🔓 DECOMPRESSED SESSION (pako):",
+                decompressedSession
+              );
+            }
+
+            // Parse the decompressed session data - it's a JWT token
+            if (
+              decompressedSession.includes(".") &&
+              decompressedSession.split(".").length === 3
+            ) {
+              // It's a JWT token
+              console.log("🎫 Detected JWT token, parsing payload...");
+              const jwtParts = decompressedSession.split(".");
+              const payload = jwtParts[1];
+              const paddedPayload =
+                payload + "=".repeat((4 - (payload.length % 4)) % 4);
+              const decodedPayload = atob(paddedPayload);
+              sessionData = JSON.parse(decodedPayload);
+              console.log("📋 PARSED JWT PAYLOAD:", sessionData);
+            } else {
+              // It's plain JSON
+              console.log("📄 Detected JSON data, parsing directly...");
+              sessionData = JSON.parse(decompressedSession);
+              console.log("📋 PARSED SESSION DATA:", sessionData);
+            }
+          } catch (error) {
+            console.error("Failed to decompress/parse session data:", error);
+          }
+        }
+
+        // Extract user data from session (JWT payload structure)
+        const orgId = sessionData.org_id || sessionData.orgId;
+        const userRoles = sessionData.user_roles || sessionData.userRoles;
+        const role = sessionData.role;
+
+        // Check realm_access for platform admin roles (JWT structure)
+        const realmRoles = sessionData?.realm_access?.roles || [];
+        const isPlatformAdminFromRealm =
+          realmRoles.includes("platform_admin") ||
+          realmRoles.includes("platform-admin") ||
+          realmRoles.includes("platform admin");
+
+        // Check resource_access for owner roles (JWT structure)
+        const resourceAccess = sessionData?.resource_access || {};
+        const hasOwnerRoleFromJWT = Object.values(resourceAccess).some(
+          (resource: any) => resource?.roles?.includes("owner")
+        );
+
+        console.log("🔍 DETAILED COOKIE DEBUG:");
+        console.log("Raw cookie header:", cookieHeader);
+        console.log("Parsed cookies keys:", Object.keys(cookies));
+        console.log("Session data extracted:", {
+          orgId: orgId,
+          userRoles: userRoles,
+          role: role,
+          realmRoles: realmRoles,
+          isPlatformAdminFromRealm: isPlatformAdminFromRealm,
+          hasOwnerRoleFromJWT: hasOwnerRoleFromJWT,
+          email: sessionData?.email,
+          preferredUsername: sessionData?.preferred_username,
+        });
+
+        console.log("Emergency Bypass Debug:", {
+          orgId: !!orgId,
+          orgIdValue: orgId,
+          userRoles: userRoles,
+          role: role,
+          isPlatformAdmin: isPlatformAdminFromRealm,
+          hasOwnerRole:
+            hasOwnerRoleFromJWT ||
+            (userRoles?.includes ? userRoles.includes("owner") : false),
+          cookieCount: Object.keys(cookies).length,
+          allCookieKeys: Object.keys(cookies),
+          sessionExists: !!sessionCookie,
+        });
+
+        // Check for holder role - new users with holder role and no orgId should register organization
+        const isHolderRole =
+          role === "holder" ||
+          (Array.isArray(userRoles) && userRoles.includes("holder")) ||
+          (typeof userRoles === "string" && userRoles.includes("holder")) ||
+          realmRoles.includes("holder");
+
+        // Enhanced Registration Flow: holder role users without organization should register
+        if (isHolderRole && !orgId) {
+          console.log(
+            "Holder role user without organization context, redirecting to organization registration"
+          );
+          console.log(
+            "REDIRECT DEBUG: Redirecting to:",
+            pathRoutes.organizations.register
+          );
+          return {
+            permitted: false,
+            redirect: pathRoutes.organizations.register,
+            authorized: true,
+          };
+        }
+
+        // All other users (including platform admins with orgs, or any user with orgs) go to dashboard
+        console.log(
+          "User has organization context or is not holder role, allowing dashboard access"
+        );
+
+        // Users with owner role can also access dashboard when they have organization context
+        const hasOwnerRole =
+          hasOwnerRoleFromJWT ||
+          (Array.isArray(userRoles) && userRoles.includes("owner")) ||
+          (typeof userRoles === "string" && userRoles.includes("owner"));
+
+        if (hasOwnerRole) {
+          console.log(
+            "Owner role detected (JWT resource_access or legacy), allowing dashboard access"
+          );
+          return {
+            permitted: true,
+            authorized: true,
+          };
+        }
+      }
+
+      console.log("User has organization context, allowing dashboard access");
       return {
         permitted: true,
         authorized: true,
+      };
+    }
+  }
+
+  // ENHANCED REGISTRATION FLOW: Allow organization registration for authenticated users
+  // Allow access to organization registration pages for users with valid sessions
+  console.log(
+    "SESSION CHECK: Checking if path matches organization registration"
+  );
+  console.log("SESSION CHECK: Current path:", currentPath);
+  console.log(
+    "SESSION CHECK: pathRoutes.organizations.register:",
+    pathRoutes.organizations.register
+  );
+  console.log(
+    "SESSION CHECK: pathRoutes.organizations.registerOrganization:",
+    pathRoutes.organizations.registerOrganization
+  );
+  console.log(
+    "SESSION CHECK: Path includes check:",
+    currentPath.includes("/organizations/register-organization") ||
+      currentPath.includes("/organizations/register")
+  );
+
+  if (
+    currentPath === pathRoutes.organizations.registerOrganization ||
+    currentPath === pathRoutes.organizations.register ||
+    currentPath.includes("/organizations/register-organization") ||
+    currentPath.includes("/organizations/register")
+  ) {
+    console.log("*** ORGANIZATION REGISTRATION ACCESS CHECK ***");
+    const hasCookies = request.headers.has("cookie");
+    if (hasCookies) {
+      console.log(
+        "User has valid session, allowing organization registration access"
+      );
+      return {
+        permitted: true,
+        authorized: true,
+      };
+    } else {
+      console.log("No session found, redirecting to sign-in");
+      return {
+        permitted: false,
+        redirect: "/authentication/sign-in",
+        authorized: false,
       };
     }
   }
@@ -125,21 +383,18 @@ export const checkUserSession = async (
 
     // Handle token refresh if needed
     if (userData?.statusCode === apiStatusCodes.API_STATUS_UNAUTHORIZED) {
-      const refreshToken = cookies.refresh;
-
-      const refreshConfig = {
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ refreshToken: refreshToken }),
-      };
-
-      const refreshRes = await fetch(
-        `${baseURL + apiRoutes.auth.refreshToken}`,
-        refreshConfig
+      const sessionId = Math.random().toString(36).substr(2, 8);
+      console.log(
+        `🔄 [FeatureSessionCheck] [${sessionId}] User unauthorized - starting token refresh process`
       );
-      const userSession = await refreshRes.json();
+      console.log(
+        `📍 [FeatureSessionCheck] [${sessionId}] Current path: ${currentPath}`
+      );
 
-      if (userSession?.statusCode !== apiStatusCodes.API_STATUS_SUCCESS) {
+      if (!cookies.refresh) {
+        console.error(
+          `❌ [FeatureSessionCheck] [${sessionId}] No refresh token available in cookies, redirecting to sign-in`
+        );
         return {
           permitted: false,
           redirect: pathRoutes.auth.sinIn,
@@ -147,13 +402,69 @@ export const checkUserSession = async (
         };
       }
 
-      // Token refresh successful - we should redirect to login to get fresh cookies
-      // Since we can't set cookies from this context
-      return {
-        permitted: false,
-        redirect: pathRoutes.auth.sinIn,
-        authorized: false,
-      };
+      console.log(
+        `✅ [FeatureSessionCheck] [${sessionId}] Refresh token found in cookies`
+      );
+
+      try {
+        console.log(
+          `🔄 [FeatureSessionCheck] [${sessionId}] Calling TokenRefreshManager.refreshTokens()`
+        );
+        const refreshResult = await TokenRefreshManager.refreshTokens();
+
+        console.log(
+          `📊 [FeatureSessionCheck] [${sessionId}] Token refresh result:`,
+          {
+            success: refreshResult.success,
+            hasNewToken: !!refreshResult.newToken,
+            error: refreshResult.error,
+          }
+        );
+
+        if (refreshResult.success) {
+          console.log(
+            `✅ [FeatureSessionCheck] [${sessionId}] Token refresh successful, allowing user to continue with path: ${currentPath}`
+          );
+          const successResult = {
+            permitted: true,
+            authorized: true,
+          };
+          logSessionResult(
+            sessionId,
+            successResult,
+            "Token refresh successful",
+            currentPath
+          );
+          return successResult;
+        } else {
+          console.error(
+            `❌ [FeatureSessionCheck] [${sessionId}] Token refresh failed, redirecting to sign-in. Error:`,
+            refreshResult.error
+          );
+          const failResult = {
+            permitted: false,
+            redirect: pathRoutes.auth.sinIn,
+            authorized: false,
+          };
+          logSessionResult(
+            sessionId,
+            failResult,
+            "Token refresh failed",
+            currentPath
+          );
+          return failResult;
+        }
+      } catch (error) {
+        console.error(
+          `💥 [FeatureSessionCheck] [${sessionId}] Token refresh threw exception:`,
+          error
+        );
+        return {
+          permitted: false,
+          redirect: pathRoutes.auth.sinIn,
+          authorized: false,
+        };
+      }
     }
 
     // Session is valid - now check feature-based access
@@ -304,10 +615,18 @@ export const checkUserSession = async (
   }
 
   // For now, allow access if user has any role (transitional period)
-  return {
+  const finalResult = {
     permitted: true,
     authorized: true,
   };
+
+  logSessionResult(
+    sessionCheckId,
+    finalResult,
+    "Fallback access granted",
+    currentPath
+  );
+  return finalResult;
 };
 
 /**

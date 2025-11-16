@@ -37,7 +37,7 @@ export const AlertComponent = ({
 								<div>{message}</div>
 								{viewButton && (
 									<div className="md:w-32 lg:w-48 text-base text-primary-700 text-right flex justify-end mr-2">
-										<a href={path}>View more... </a>
+										<a href={path} className="font-medium hover:underline">View Invitations</a>
 									</div>
 								)}
 							</div>

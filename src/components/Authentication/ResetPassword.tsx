@@ -106,7 +106,7 @@ const ResetPassword = () => {
 			if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
 				setMessage(data.message);
 				setLoading(false);
-				window.location.href=pathRoutes.auth.sinIn
+				window.location.href = pathRoutes.auth.sinIn
 			} else {
 				setErrMsg(response as string);
 				setLoading(false);
@@ -156,7 +156,7 @@ const ResetPassword = () => {
 							</div>
 
 							<div className="md:hidden block bg-blue-500 bg-opacity-10 mt-4">
-								<img src="/images/signin.svg" alt="img" />
+								{/* <img src="/images/signin.svg" alt="img" /> */}
 							</div>
 
 							<Formik
@@ -317,7 +317,7 @@ const ResetPassword = () => {
 													isProcessing={loading}
 													className="w-full font-medium text-center text-white bg-primary-700 hover:!bg-primary-800 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
 												>
-													
+
 													<svg
 														xmlns="http://www.w3.org/2000/svg"
 														width="16"

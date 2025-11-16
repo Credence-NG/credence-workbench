@@ -1,0 +1,45 @@
+---
+import LayoutStacked from '../../app/LayoutStacked.astro';
+---
+
+<LayoutStacked title="Organization Verification - Admin" description="Review and approve organization registrations">
+  <div id="org-verification-container"></div>
+  
+  <script>
+    import { createRoot } from 'react-dom/client';
+    import React from 'react';
+    import OrganizationVerification from '../../components/organization/OrganizationVerification.tsx';
+    import { enforceAdminAccess, AdminFeatures } from '../../utils/adminAccess.ts';
+    
+    // Initialize the page with admin access check
+    const initializePage = async () => {
+      try {
+        // Check if user has admin approval permissions
+        await enforceAdminAccess(AdminFeatures.APPROVE_ORGANIZATION);
+        
+        // If we reach here, user has access
+        const container = document.getElementById('org-verification-container');
+        if (container) {
+          const root = createRoot(container);
+          
+          const handleSuccess = (message: string) => {
+            // Could integrate with notification system
+            console.log('Success:', message);
+          };
+          
+          root.render(React.createElement(OrganizationVerification, { onSuccess: handleSuccess }));
+        }
+      } catch (error) {
+        console.error('Access denied:', error);
+        // User will be redirected by enforceAdminAccess
+      }
+    };
+    
+    // Initialize page when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializePage);
+    } else {
+      initializePage();
+    }
+  </script>
+</LayoutStacked>

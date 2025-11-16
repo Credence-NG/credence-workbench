@@ -1,0 +1,27 @@
+---
+import LayoutSidebar from '../../../app/LayoutSidebar.astro';
+import EcosystemSettings from '../../../components/Ecosystem/EcosystemSettings';
+import { checkUserSession } from '../../../utils/check-session';
+import { canPerformAction } from '../../../utils/ecosystemPermissions';
+
+const { ecosystemId } = Astro.params;
+const response = await checkUserSession({cookies: Astro.cookies, currentPath: Astro.url.pathname});
+
+if (!response.authorized) {
+	return Astro.redirect(response.redirect);
+}
+
+// Only Platform Admins can manage settings
+const canManageSettings = await canPerformAction('canManageSettings');
+if (!canManageSettings) {
+	return Astro.redirect(`/ecosystems/${ecosystemId}/dashboard?error=unauthorized`);
+}
+
+if (!ecosystemId) {
+	return Astro.redirect('/ecosystems');
+}
+---
+
+<LayoutSidebar notFoundPage={!response.permitted}>
+	<EcosystemSettings client:visible ecosystemId={ecosystemId} />
+</LayoutSidebar>

@@ -87,57 +87,41 @@ const UserDashBoard = () => {
 	const [isAccess, setIsAccess] = useState(false)
 	const [isW3C, setIsW3C] = useState<boolean>(true)
 	const [isPlatformAdmin, setIsPlatformAdmin] = useState<boolean>(false);
+	const [currentUserOrgId, setCurrentUserOrgId] = useState<string>('');
 
-	// Check if user is platform admin and ensure organization context
-	const checkPlatformAdminStatus = async () => {
-		try {
-			const userRoles = await getFromLocalStorage(storageKeys.USER_ROLES);
-			if (userRoles && typeof userRoles === 'string') {
-				const roles = userRoles.split(',');
-				const isAdmin = roles.includes(PlatformRoles.platformAdmin);
-				setIsPlatformAdmin(isAdmin);
-
-				// If platform admin, ensure they have organization context for dashboard functionality
-				if (isAdmin) {
-					await ensureOrganizationContext();
-				}
-
-				return isAdmin;
-			}
-			return false;
-		} catch (error) {
-			console.error('Error checking platform admin status:', error);
-			return false;
+	// Utility function to safely get user role name
+	const getUserRoleName = (org: Organisation, index: number = 0): string | null => {
+		if (!org?.userOrgRoles || !Array.isArray(org.userOrgRoles) || org.userOrgRoles.length <= index) {
+			return null;
 		}
+		const role = org.userOrgRoles[index];
+		return role?.orgRole?.name || null;
 	};
 
-	// Ensure platform admin has organization context for dashboard APIs
-	const ensureOrganizationContext = async () => {
-		try {
-			let orgId = await getFromLocalStorage(storageKeys.ORG_ID);
+	// Check if user has platform admin role and get current org ID
+	useEffect(() => {
+		const checkPlatformAdminRole = async () => {
+			try {
+				const userRoles = await getFromLocalStorage(storageKeys.USER_ROLES);
+				const orgId = await getFromLocalStorage(storageKeys.ORG_ID);
 
-			// If no organization context, get the first available organization
-			if (!orgId) {
-				const response = await getOrganizations(1, 50, ''); // Get more orgs for platform admin
-				const { data } = response as AxiosResponse;
-
-				if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS &&
-					data?.data?.organizations?.length > 0) {
-					// Set the first organization as context for platform admin
-					const firstOrg = data.data.organizations[0];
-					await setToLocalStorage(storageKeys.ORG_ID, firstOrg.id);
-
-					// Also set a default organization role for dashboard functionality
-					const orgRoles = await getFromLocalStorage(storageKeys.ORG_ROLES);
-					if (!orgRoles) {
-						await setToLocalStorage(storageKeys.ORG_ROLES, 'owner'); // Default to owner for platform admin
-					}
+				if (userRoles) {
+					const roles = userRoles.split(',');
+					const hasPlatformAdminRole = roles.includes(PlatformRoles.platformAdmin);
+					setIsPlatformAdmin(hasPlatformAdminRole);
 				}
+
+				if (orgId) {
+					setCurrentUserOrgId(orgId);
+				}
+			} catch (error) {
+				console.error('Error checking platform admin role:', error);
+				setIsPlatformAdmin(false);
 			}
-		} catch (error) {
-			console.error('Error ensuring organization context:', error);
-		}
-	};
+		};
+
+		checkPlatformAdminRole();
+	}, []);
 
 	const getAllInvitations = async () => {
 		setLoading(true);
@@ -152,8 +136,14 @@ const UserDashBoard = () => {
 			if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
 				const totalPages = data?.data?.totalPages;
 				const invitationList = data?.data?.invitations;
-				if (invitationList.length > 0) {
-					setMessage(`You have received invitations to join organization`);
+
+				// Filter for pending invitations only
+				const pendingInvitations = invitationList?.filter((invitation: any) =>
+					invitation.status === 'pending'
+				) || [];
+
+				if (pendingInvitations && pendingInvitations.length > 0) {
+					setMessage(`You have ${pendingInvitations.length} pending invitation${pendingInvitations.length > 1 ? 's' : ''} to join organization${pendingInvitations.length > 1 ? 's' : ''}`);
 					setViewButton(true);
 				}
 				setCurrentPage({
@@ -164,38 +154,71 @@ const UserDashBoard = () => {
 				setError(response as string);
 			}
 		} catch (err) {
-			setError('An unexpected error occurred');
+			setError('An unexpected error occurred while fetching invitations');
 		}
 		setLoading(false);
 	};
 
 	const getAllOrganizations = async () => {
 		setOrgLoading(true);
-
-		// Check if user is platform admin first
-		const isAdmin = await checkPlatformAdminStatus();
-
 		const response = await getOrganizations(
 			currentPage.pageNumber,
 			currentPage.pageSize,
 			'',
 		);
 		const { data } = response as AxiosResponse;
+		//console.log('Organizations Data( Malik ):', data);
+
 		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
 			setOrgCount(data?.data?.totalCount);
+			let organizations = data?.data?.organizations || [];
 
-			// For platform admin, show more organizations and add platform admin context
-			let orgList;
-			if (isAdmin) {
-				// Platform admin gets to see all organizations, not just first 3
-				orgList = data?.data?.organizations?.slice(0, 6) || []; // Show 6 instead of 3
-			} else {
-				// Regular users see first 3 organizations
-				orgList = data?.data?.organizations?.filter(
-					(userOrg: Organisation, index: number) => index < 3,
-				) || [];
+			// Add data validation and cleanup
+			organizations = organizations.map((org: Organisation) => {
+				// Ensure userOrgRoles is always an array
+				if (!Array.isArray(org.userOrgRoles)) {
+					console.warn('Invalid userOrgRoles for organization:', org.id, org.userOrgRoles);
+					org.userOrgRoles = [];
+				}
+
+				// Filter out invalid roles and add logging for debugging
+				org.userOrgRoles = org.userOrgRoles.filter((role) => {
+					if (!role || !role.orgRole || !role.orgRole.name) {
+						console.warn('Invalid role data found:', role, 'in organization:', org.id);
+						return false;
+					}
+					return true;
+				});
+
+				return org;
+			});
+
+			// For non-platform admin users, show only their own organization
+			if (!isPlatformAdmin && currentUserOrgId) {
+				organizations = organizations.filter((org: Organisation) => {
+					return org.id === currentUserOrgId;
+				});
+			} else if (!isPlatformAdmin) {
+				// If no current org ID is set, filter out platform admin organizations
+				organizations = organizations.filter((org: Organisation) => {
+					// Check if the organization has any roles that indicate it's a platform admin org
+					const hasPlatformAdminRole = org.userOrgRoles?.some((userOrgRole: any) =>
+						userOrgRole.orgRole?.name === 'platform_admin'
+					);
+
+					// Also check if the organization name suggests it's a platform admin org
+					const isPlatformAdminOrgByName = org.name?.toLowerCase().includes('platform') &&
+						(org.name?.toLowerCase().includes('admin') || org.name?.toLowerCase().includes('credebl'));
+
+					// Exclude organizations with platform admin roles or platform admin naming
+					return !hasPlatformAdminRole && !isPlatformAdminOrgByName;
+				});
 			}
 
+			const orgList = organizations.filter(
+				(userOrg: Organisation, index: number) => index < 3,
+			);
+			//	console.log('Filtered Organizations Data( Malik ):', orgList);
 			setOrganizationList(orgList);
 		} else {
 			setError(response as string);
@@ -334,21 +357,31 @@ const UserDashBoard = () => {
 	const fetchOrganizationDetails = async () => {
 		setWalletLoading(true);
 		let orgId = await getFromLocalStorage(storageKeys.ORG_ID);
+		console.log('🔍 [UserDashboard] Fetching org details for orgId:', orgId);
 		if (!orgId && organizationsList) {
 			orgId = organizationsList[0].id;
 		}
 		const response = await getOrganizationById(orgId);
+		console.log('📡 [UserDashboard] RAW API Response:', response);
 		const { data } = response as AxiosResponse;
+		console.log('📦 [UserDashboard] Response data:', data);
+		console.log('📦 [UserDashboard] Response data.data:', data?.data);
 		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
-			const orgAgentsList = data?.data?.org_agents;
-			if (orgAgentsList && orgAgentsList.length > 0) {
-				const orgDid = orgAgentsList[0].orgDid;
-				setWalletData(data?.data?.org_agents);
+			const orgAgentsData = data?.data?.org_agents;
+			console.log('🤖 [UserDashboard] org_agents from API:', orgAgentsData);
+
+			// Check if org_agents exists (it's an object, not an array)
+			if (orgAgentsData && typeof orgAgentsData === 'object') {
+				console.log('✅ [UserDashboard] Wallet exists! Setting walletData');
+				const orgDid = orgAgentsData.orgDid;
+				// Wrap the single object in an array for consistency with existing code
+				setWalletData([orgAgentsData]);
 
 				if (orgDid?.includes(DidMethod.INDY)) {
 					setIsW3C(false);
 				}
 			} else {
+				console.log('❌ [UserDashboard] No wallet found, setting empty array');
 				setWalletData([]);
 			}
 		}
@@ -356,47 +389,27 @@ const UserDashBoard = () => {
 	};
 
 	const getAllResponses = async () => {
-		// Initialize platform admin status and ensure organization context
-		const isAdmin = await checkPlatformAdminStatus();
-
-		// Get cumulative roles: platform admin + organization roles
-		const platformRoles = await getFromLocalStorage(storageKeys.USER_ROLES);
-		const orgRoles = await getFromLocalStorage(storageKeys.ORG_ROLES);
-
-		// Platform admins get full access regardless of organization role
-		// Other users follow organization role hierarchy
-		if (isAdmin || orgRoles === Roles.OWNER) {
+		const role = await getFromLocalStorage(storageKeys.ORG_ROLES);
+		if (role === Roles.OWNER) {
 			checkOrgId();
 		}
 
-		// Load all dashboard data
 		getAllOrganizations();
 		getAllInvitations();
 		getUserRecentActivity();
-
-		// Ensure schemas and credentials load with organization context
-		const orgId = await getFromLocalStorage(storageKeys.ORG_ID);
-		if (orgId) {
-			// Load schema data
-			const schemaParams = {
-				pageNumber: 1,
-				pageSize: 10,
-				search: '',
-				sorting: '',
-				sortingOrder: '',
-			};
-			getSchemaList(schemaParams, false);
-
-			// Load credential definitions
-			getSchemaCredentials();
-
-			// Load organization details for wallet info
-			fetchOrganizationDetails();
-		}
 	};
 
 	useEffect(() => {
 		getAllResponses();
+
+		// Set up periodic invitation checking every 5 minutes
+		const invitationInterval = setInterval(() => {
+			getAllInvitations();
+		}, 5 * 60 * 1000); // 5 minutes
+
+		return () => {
+			clearInterval(invitationInterval);
+		};
 	}, []);
 
 	useEffect(() => {
@@ -448,7 +461,9 @@ const UserDashBoard = () => {
 
 	const setOrgRoleDetails = async (org: Organisation) => {
 		await setToLocalStorage(storageKeys.ORG_ID, org.id.toString());
-		const roles: string[] = org?.userOrgRoles.map((role) => role.orgRole.name);
+		const roles: string[] = org?.userOrgRoles
+			?.filter((role) => role?.orgRole?.name) // Filter out roles without orgRole or name
+			?.map((role) => role.orgRole.name) || [];
 
 		await setToLocalStorage(storageKeys.ORG_ROLES, roles.toString());
 
@@ -559,20 +574,6 @@ const UserDashBoard = () => {
 	return (
 		<>
 			<div className="px-4 pt-6">
-				{/* Platform Admin Indicator */}
-				{isPlatformAdmin && (
-					<div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900 dark:border-blue-700">
-						<div className="flex items-center">
-							<svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-								<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-							</svg>
-							<span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-								Platform Administrator - You have elevated access to all platform features
-							</span>
-						</div>
-					</div>
-				)}
-
 				<div className="cursor-pointer">
 					{message && message.length > 0 &&
 
@@ -709,9 +710,9 @@ const UserDashBoard = () => {
 									{organizationsList && organizationsList?.length > 0 ? (
 										<>
 											{organizationsList?.map((org, index) => {
-												const roles: string[] = org.userOrgRoles.map(
-													(role) => role.orgRole.name,
-												);
+												const roles: string[] = org?.userOrgRoles
+													?.filter((role) => role?.orgRole?.name) // Filter out roles without orgRole or name
+													?.map((role) => role.orgRole.name) || [];
 												org.roles = roles;
 												return (
 													<div
@@ -840,7 +841,7 @@ const UserDashBoard = () => {
 														<div className="hidden sm:flex space-x-3 items-center">
 															<Tooltip
 																content={
-																	org.org_agents && org.org_agents.length > 0
+																	org.org_agents && org.org_agents.orgDid
 																		? 'Create Schema'
 																		: 'Wallet is not created, first create a wallet, then create schema'
 																} placement="bottom"
@@ -848,16 +849,14 @@ const UserDashBoard = () => {
 															>
 																<button
 																	onClick={() => {
-																		org.org_agents && org.org_agents.length > 0
+																		org.org_agents && org.org_agents.orgDid
 																			? goToOrgSchema(org, org.id, org.roles)
 																			: window.location.href = pathRoutes.organizations.dashboard;
 																	}}
 																	className={`p-1 rounded-md ${!(
-																		organizationsList[index].userOrgRoles[0]
-																			.orgRole.name ===
+																		getUserRoleName(organizationsList[index]) ===
 																		OrganizationRoles.organizationOwner ||
-																		organizationsList[index].userOrgRoles[0]
-																			.orgRole.name ===
+																		getUserRoleName(organizationsList[index]) ===
 																		OrganizationRoles.organizationAdmin
 																	)
 																		? 'cursor-not-allowed opacity-50'
@@ -865,11 +864,9 @@ const UserDashBoard = () => {
 																		}`}
 																	disabled={
 																		!(
-																			organizationsList[index].userOrgRoles[0]
-																				.orgRole.name ===
+																			getUserRoleName(organizationsList[index]) ===
 																			OrganizationRoles.organizationOwner ||
-																			organizationsList[index].userOrgRoles[0]
-																				.orgRole.name ===
+																			getUserRoleName(organizationsList[index]) ===
 																			OrganizationRoles.organizationAdmin
 																		)
 																	}

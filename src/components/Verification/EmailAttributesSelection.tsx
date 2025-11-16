@@ -31,23 +31,23 @@ const EmailAttributesSelection = () => {
 
 	const ConnectionVerification = async () => {
 		const conn = await getFromLocalStorage(storageKeys.VERIFICATION_ROUTE_TYPE)
-		if(conn === 'Connection'){
+		if (conn === 'Connection') {
 			setIsConnectionProof(true)
-		}else{
+		} else {
 			setIsConnectionProof(false)
 		}
-	  }
-	  useEffect(() => {
+	}
+	useEffect(() => {
 		ConnectionVerification();
-	  }, []);
-	
+	}, []);
+
 
 	const handleAttributeChange = async (
 		attributeName: string,
 		changeType: 'checkbox' | 'input' | 'select',
 		value: string | boolean,
 		schemaId?: string | undefined,
-        credDefId?: string | undefined
+		credDefId?: string | undefined
 	) => {
 		const updatedAttributes = attributeData?.map(attribute => {
 			if (attribute.attributeName === attributeName && attribute.schemaId === schemaId && attribute.credDefId === credDefId) {
@@ -93,11 +93,11 @@ const EmailAttributesSelection = () => {
 		const response = await getOrganizationById(orgId);
 		const { data } = response as AxiosResponse;
 		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
-			const did = data?.data?.org_agents?.[0]?.orgDid;
+			const did = data?.data?.org_agents?.orgDid;
 
 			if (did.includes(DidMethod.POLYGON) || did.includes(DidMethod.KEY) || did.includes(DidMethod.WEB)) {
 				setW3cSchema(true);
-			}else if (did.includes(DidMethod.INDY)) {
+			} else if (did.includes(DidMethod.INDY)) {
 				setW3cSchema(false);
 			}
 		}
@@ -110,41 +110,41 @@ const EmailAttributesSelection = () => {
 	}, []);
 
 
-		const handleSubmit = () => {
-			setErrMsg(null);
-			
-			if (w3cSchema ) {
-				redirectToAppropriatePage();
-				return;
-			}
-		
-			if (hasInvalidNumberAttributes()) {
-				return;
-			}
-		
+	const handleSubmit = () => {
+		setErrMsg(null);
+
+		if (w3cSchema) {
 			redirectToAppropriatePage();
-		};
-	
+			return;
+		}
+
+		if (hasInvalidNumberAttributes()) {
+			return;
+		}
+
+		redirectToAppropriatePage();
+	};
+
 	const hasInvalidNumberAttributes = (): boolean => {
 
 		const numberAttributes = attributeData?.filter(
 			(attr) => attr.dataType === 'number' && attr.isChecked
 		);
-	
+
 		for (const attribute of numberAttributes || []) {
 			if (isInvalidNumberAttribute(attribute)) {
 				return true;
 			}
 		}
-	
+
 		return false;
 	};
 
 	const isInvalidNumberAttribute = (attribute: any): boolean => {
-		
+
 		const isOptionInvalid = attribute.selectedOption === null || attribute.selectedOption === "" || attribute.selectedOption === 'Select';
 		const isValueInvalid = attribute.value === null || attribute.value === "";
-	
+
 		if (!isOptionInvalid && isValueInvalid) {
 			setErrMsg('Value is required');
 			return true;
@@ -154,7 +154,7 @@ const EmailAttributesSelection = () => {
 		}
 		return false;
 	};
-	
+
 	const redirectToAppropriatePage = () => {
 		switch (true) {
 			case w3cSchema && isConnectionProof:
@@ -170,19 +170,19 @@ const EmailAttributesSelection = () => {
 				window.location.href = pathRoutes.organizations.verification.emailVerification;
 				break;
 		}
-	};	
+	};
 
 	const loadAttributesData = async () => {
-	
+
 		setLoading(true);
-	
+
 		try {
 			setAttributeData([]);
-	
+
 			if (w3cSchema) {
 				const getW3CSchemaDetails = await getFromLocalStorage(storageKeys.SELECTED_SCHEMAS);
 				const parsedW3CSchemaDetails = JSON.parse(getW3CSchemaDetails || '[]');
-		
+
 				if (Array.isArray(parsedW3CSchemaDetails) && parsedW3CSchemaDetails.length > 0) {
 					const allAttributes = parsedW3CSchemaDetails.flatMap(schema => {
 						if (schema.attributes && Array.isArray(schema.attributes)) {
@@ -196,7 +196,7 @@ const EmailAttributesSelection = () => {
 						}
 						return [];
 					});
-	
+
 					const inputArray = allAttributes.map(attribute => ({
 						displayName: attribute.displayName,
 						attributeName: attribute.attributeName,
@@ -213,20 +213,20 @@ const EmailAttributesSelection = () => {
 						inputError: '',
 						selectError: ''
 					}));
-	
+
 					setAttributeData(inputArray);
 				} else {
 					console.error('W3C schema details are not in the expected format.');
 				}
-	
+
 			} else {
 				const getSelectedCredDefData = await getFromLocalStorage(storageKeys.CRED_DEF_DATA);
 				const selectedCredDefs = JSON.parse(getSelectedCredDefData || '[]');
-	
+
 				const schemaAttributes = await getFromLocalStorage(storageKeys.SCHEMA_ATTRIBUTES);
 				const parsedSchemaDetails = JSON.parse(schemaAttributes || '[]');
-	
-	
+
+
 				if (Array.isArray(parsedSchemaDetails) && parsedSchemaDetails.length > 0) {
 					const allAttributes = parsedSchemaDetails.flatMap(schema => {
 						if (schema.attributes && Array.isArray(schema.attributes)) {
@@ -234,7 +234,7 @@ const EmailAttributesSelection = () => {
 								const matchingCredDefs = selectedCredDefs.filter(
 									credDef => credDef.schemaLedgerId === schema.schemaId
 								);
-	
+
 								return matchingCredDefs.map(credDef => ({
 									displayName: attribute.displayName,
 									attributeName: attribute.attributeName,
@@ -255,7 +255,7 @@ const EmailAttributesSelection = () => {
 						}
 						return [];
 					});
-	
+
 					setAttributeData(allAttributes);
 				} else {
 					console.error('Parsed schema details are not in the expected format.');
@@ -267,12 +267,12 @@ const EmailAttributesSelection = () => {
 			setLoading(false);
 		}
 	};
-	
+
 	useEffect(() => {
 		loadAttributesData();
 	}, [w3cSchema]);
-	
-	
+
+
 	const attributeFunction = async () => {
 		const attributes = attributeData?.map((attribute: ISelectedAttributes) => {
 			return {

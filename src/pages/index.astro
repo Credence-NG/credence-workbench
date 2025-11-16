@@ -1,8 +1,4 @@
 ---
-import LayoutCommon from '../app/LayoutCommon.astro';
-import SignIn from './authentication/sign-in.astro';
-
+// Redirect root path to sign-in page
+return Astro.redirect('/authentication/sign-in');
 ---
-<LayoutCommon>
-	<SignIn />
-</LayoutCommon>

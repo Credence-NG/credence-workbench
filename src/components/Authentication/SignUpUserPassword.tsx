@@ -15,6 +15,7 @@ import {
 	passwordRegex,
 	storageKeys,
 } from '../../config/CommonConstant.js';
+import { pathRoutes } from '../../config/pathRoutes.js';
 import { useState } from 'react';
 
 import SignUpUserPasskey from './SignUpUserPasskey';
@@ -24,58 +25,60 @@ import PasswordSuggestionBox from './PasswordSuggestionBox.js';
 import { PassInvisible, PassVisible, SignUpArrow } from './Svg.js';
 
 interface passwordValues {
-	email: string;
 	password: string;
 	confirmPassword: string;
 }
 
 const SignUpUserPassword = ({
-	email,
 	firstName,
 	lastName,
+	phoneNumber,
 }: {
-	email: string,
 	firstName: string;
 	lastName: string;
+	phoneNumber: string;
 }) => {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [erroMsg, setErrMsg] = useState<string | null>(null);
+	const [message, setMessage] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
 	const [verificationSuccess] = useState<string>('');
 	const [passwordVisible, setPasswordVisible] = useState(false);
 	const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 	const [showSignUpUser, setShowSignUpUser] = useState(false);
 	const [showSuggestion, setShowSuggestion] = useState(false);
 
-	const submit = async (passwordDetails: passwordValues, fidoFlag: boolean) => {
-		const userEmail = await getFromLocalStorage(storageKeys.USER_EMAIL);
-		const payload = {
-			email: userEmail,
-			password: passwordEncryption(passwordDetails?.password),
-			isPasskey: false,
-			firstName,
-			lastName,
-		};
-
+	const handlePasswordDetails = async (values: passwordValues) => {
 		setLoading(true);
 
-		const userRsp = await addPasswordDetails(payload);
+		// Get email from localStorage
+		const userEmail = await getFromLocalStorage(storageKeys.USER_EMAIL);
+
+		const userRsp = await addPasswordDetails({
+			email: userEmail,
+			password: passwordEncryption(values.password),
+			isPasskey: false,
+			firstName: firstName,
+			lastName: lastName,
+			phoneNumber: phoneNumber,
+		});
 		const { data } = userRsp as AxiosResponse;
-		setLoading(false);
+
 		if (data?.statusCode === apiStatusCodes.API_STATUS_CREATED) {
-			window.location.href = `/authentication/sign-in?signup=true&email=${userEmail}&fidoFlag=${fidoFlag}&method=password`
-
+			setMessage(data?.message);
+			setLoading(false);
+			window.location.href = pathRoutes.users.dashboard;
 		} else {
-			setErrMsg(userRsp as string);
+			setError(userRsp as string);
+			setLoading(false);
 		}
-		return userRsp;
-	};
 
-	const handleBackButtonClick = () => {
+		return userRsp;
+	}; const handleBackButtonClick = () => {
 		setShowSignUpUser(!showSignUpUser);
 	};
 
 	const initialValues = {
-		email: email,
 		firstName: '',
 		lastName: '',
 		password: '',
@@ -96,7 +99,7 @@ const SignUpUserPassword = ({
 	return (
 		<div>
 			{showSignUpUser ? (
-				<SignUpUserPasskey email={email} firstName={firstName} lastName={lastName} />
+				<SignUpUserPasskey firstName={firstName} lastName={lastName} phoneNumber={phoneNumber} />
 			) : (
 				<div className="flex flex-col min-h-screen">
 					<NavBar />
@@ -152,7 +155,7 @@ const SignUpUserPassword = ({
 								</div>
 
 								<div className="md:hidden block bg-blue-500 bg-opacity-10 mt-4">
-									<img src="/images/signin.svg" alt="img" />
+										{ }
 								</div>
 
 								<Formik
@@ -162,7 +165,7 @@ const SignUpUserPassword = ({
 									validateOnChange
 									enableReinitialize
 									onSubmit={(values: passwordValues) => {
-										submit(values, false);
+										handlePasswordDetails(values);
 									}}
 								>
 									{(formikHandlers): JSX.Element => (
@@ -289,7 +292,7 @@ const SignUpUserPassword = ({
 														isProcessing={loading}
 														className="w-fit px-12 sm:px-4 xl:px-12 font-medium text-center text-white bg-primary-700 hover:!bg-primary-800 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
 													>
-														
+
 														<SignUpArrow />
 														<span className="ml-2">Sign Up</span>
 													</Button>

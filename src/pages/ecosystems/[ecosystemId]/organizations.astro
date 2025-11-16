@@ -1,0 +1,26 @@
+---
+import LayoutSidebar from '../../../app/LayoutSidebar.astro';
+import OrganizationList from '../../../components/Ecosystem/OrganizationList';
+import { checkUserSession } from '../../../utils/check-session';
+import { hasEcosystemAccess } from '../../../utils/ecosystemPermissions';
+
+const { ecosystemId } = Astro.params;
+const response = await checkUserSession({cookies: Astro.cookies, currentPath: Astro.url.pathname});
+
+if (!response.authorized) {
+	return Astro.redirect(response.redirect);
+}
+
+const hasAccess = await hasEcosystemAccess();
+if (!hasAccess) {
+	return Astro.redirect('/dashboard?error=no_ecosystem_access');
+}
+
+if (!ecosystemId) {
+	return Astro.redirect('/ecosystems');
+}
+---
+
+<LayoutSidebar notFoundPage={!response.permitted}>
+	<OrganizationList client:visible ecosystemId={ecosystemId} />
+</LayoutSidebar>

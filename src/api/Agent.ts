@@ -60,12 +60,31 @@ export const getAgentHealth = async (orgId:string) => {
     },
   };
 
+  console.log('🔍 Agent Health API Request:', {
+    method: 'GET',
+    url: details.url,
+    orgId: orgId,
+    headers: details.config.headers,
+    timestamp: new Date().toISOString()
+  });
+
   try {
     const response = await axiosGet(details)
+    console.log('✅ Agent Health API Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data,
+      timestamp: new Date().toISOString()
+    });
     return response
   }
   catch (error) {
     const err = error as Error
+    console.error('❌ Agent Health API Error:', {
+      error: err?.message,
+      orgId: orgId,
+      timestamp: new Date().toISOString()
+    });
     return err?.message
   }
 }

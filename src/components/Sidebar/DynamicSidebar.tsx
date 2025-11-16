@@ -10,13 +10,15 @@ const DynamicSidebar = () => {
 	const [userRoles, setUserRoles] = useState<string[]>([]);
 	const [userFeatures, setUserFeatures] = useState<string[]>([]);
 	const [visibleMenus, setVisibleMenus] = useState<ISidebarItem[]>([]);
-	const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set()); const getUserRoles = async (): Promise<string[]> => {
+	const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
+
+	const getUserRoles = async (): Promise<string[]> => {
 		try {
 			const roles: string[] = [];
 
 			// First, try to get all user roles (including platform admin)
 			const userRoles = await getFromLocalStorage(storageKeys.USER_ROLES);
-			console.log('DynamicSidebar: USER_ROLES from storage:', userRoles);
+			//console.log('DynamicSidebar: USER_ROLES from storage:', userRoles);
 			if (userRoles && typeof userRoles === 'string') {
 				roles.push(...userRoles.split(','));
 			}
@@ -30,9 +32,28 @@ const DynamicSidebar = () => {
 				}
 			}
 
+			// Check if we can find any role information in other storage keys as fallback
+			if (roles.length === 0) {
+				console.warn('DynamicSidebar: No roles found in localStorage, checking permissions fallback...');
+
+				const permissions = await getFromLocalStorage(storageKeys.PERMISSIONS);
+				console.log('DynamicSidebar: PERMISSIONS from storage:', permissions);
+
+				if (permissions && Array.isArray(permissions)) {
+					roles.push(...permissions);
+				} else if (permissions && typeof permissions === 'string') {
+					roles.push(...permissions.split(','));
+				}
+
+				// If still no roles found, log the situation but don't assign fake roles
+				if (roles.length === 0) {
+					console.error('DynamicSidebar: No roles found in any storage location. User may need to re-authenticate.');
+				}
+			}
+
 			// Remove duplicates and filter out empty strings
 			const uniqueRoles = [...new Set(roles)].filter(role => role && role.trim() !== '');
-			console.log('DynamicSidebar: Final processed roles:', uniqueRoles);
+			//console.log('DynamicSidebar: Final processed roles:', uniqueRoles);
 
 			setUserRoles(uniqueRoles);
 			return uniqueRoles;
@@ -45,19 +66,14 @@ const DynamicSidebar = () => {
 	const getUserFeatures = (roles: string[]): string[] => {
 		const features = new Set<string>();
 
-		console.log('DynamicSidebar: Getting features for roles:', roles);
-
 		roles.forEach(role => {
 			const rolePermission = RolePermissions.find(rp => rp.role === role);
-			console.log(`DynamicSidebar: Role "${role}" found permission:`, !!rolePermission);
 			if (rolePermission) {
-				console.log(`DynamicSidebar: Role "${role}" has ${rolePermission.features.length} features`);
 				rolePermission.features.forEach(feature => features.add(feature));
 			}
 		});
 
 		const featureArray = Array.from(features);
-		console.log('DynamicSidebar: Total unique features:', featureArray.length);
 		return featureArray;
 	};
 
@@ -73,17 +89,17 @@ const DynamicSidebar = () => {
 		});
 	}; useEffect(() => {
 		const initializeSidebar = async () => {
-			console.log('DynamicSidebar: Initializing sidebar...');
+			//console.log('DynamicSidebar: Initializing sidebar...');
 			const roles = await getUserRoles();
-			console.log('DynamicSidebar: Retrieved roles:', roles);
+			//console.log('DynamicSidebar: Retrieved roles:', roles);
 
 			const features = getUserFeatures(roles);
-			console.log('DynamicSidebar: Calculated features:', features);
+			//console.log('DynamicSidebar: Calculated features:', features);
 			setUserFeatures(features);
 
 			// Filter menus based on user features
 			let filteredMenus = getVisibleMenus(features);
-			console.log('DynamicSidebar: Visible menus:', filteredMenus.map(m => m.label));
+			//console.log('DynamicSidebar: Visible menus:', filteredMenus.map(m => m.label));
 
 			// Special handling for Credentials menu - show if user can issue OR verify
 			if (shouldShowCredentialsMenu(features)) {
@@ -151,7 +167,7 @@ const DynamicSidebar = () => {
 				<li key={item.label}>
 					<button
 						type="button"
-						className="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+						className="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-slate-700"
 						onClick={() => toggleDropdown(item.label)}
 					>
 						<SidebarIcon name={item.icon} />
@@ -171,7 +187,7 @@ const DynamicSidebar = () => {
 							<li key={child.label}>
 								<a
 									href={child.href}
-									className="flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+									className="flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-slate-700"
 								>
 									<SidebarIcon name={child.icon} />
 									<span className="ml-2">{child.label}</span>
@@ -185,7 +201,7 @@ const DynamicSidebar = () => {
 			<li key={item.label}>
 				<a
 					href={item.href}
-					className="flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700"
+					className="flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-slate-100 dark:hover:bg-slate-700"
 				>
 					<SidebarIcon name={item.icon} />
 					<span className="ml-3">{item.label}</span>
@@ -197,12 +213,13 @@ const DynamicSidebar = () => {
 	return (
 		<aside
 			id="sidebar"
-			className="fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 hidden w-64 h-full pt-16 font-normal duration-75 lg:flex transition-width"
+			className="fixed top-0 left-0 z-40 flex flex-col flex-shrink-0 w-64 h-full pt-16 font-normal duration-75 transition-transform -translate-x-full lg:translate-x-0"
 			aria-label="Sidebar"
+			data-drawer-backdrop="false"
 		>
-			<div className="relative flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+			<div className="relative flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200 dark:bg-slate-800 dark:border-slate-700">
 				<div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-					<div className="flex-1 px-3 space-y-1 bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+					<div className="flex-1 px-3 space-y-1 bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-slate-700">
 						<ul className="pb-2 space-y-2">
 							{visibleMenus.map(renderMenuItem)}
 						</ul>
@@ -223,12 +240,17 @@ const DynamicSidebar = () => {
 
 // Simple icon component - you can expand this with your actual icons
 const SidebarIcon = ({ name }: { name: string }) => {
-	const iconClasses = "w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white";
+	const iconClasses = "w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-slate-400 dark:group-hover:text-slate-50";
 
 	const iconMap: { [key: string]: JSX.Element } = {
 		dashboard: (
 			<svg className={iconClasses} fill="currentColor" viewBox="0 0 24 24">
 				<path d="M5 21c-.55 0-1.02-.196-1.413-.587A1.926 1.926 0 0 1 3 19V5c0-.55.196-1.02.587-1.413A1.926 1.926 0 0 1 5 3h14c.55 0 1.02.196 1.413.587.39.393.587.863.587 1.413v14c0 .55-.196 1.02-.587 1.413A1.926 1.926 0 0 1 19 21H5Zm5-2v-6H5v6h5Zm2 0h7v-6h-7v6Zm-7-8h14V5H5v6Z" />
+			</svg>
+		),
+		invitations: (
+			<svg className={iconClasses} fill="currentColor" viewBox="0 0 24 24">
+				<path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z" />
 			</svg>
 		),
 		organization: (

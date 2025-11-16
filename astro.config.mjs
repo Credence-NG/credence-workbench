@@ -34,9 +34,19 @@ export default defineConfig({
     /* Dev. server only */
     port: DEV_PORT,
   },
+  vite: {
+    server: {
+      allowedHosts: ['studio.confamd.com', 'localhost', '127.0.0.1']
+    },
+    esbuild: {
+      jsx: 'automatic'
+    }
+  },
   integrations: [
   //
-  sitemap(), tailwind(), react()],
+  sitemap(), tailwind(), react({
+    include: ['**/react/*', '**/components/**/*', '**/commonComponents/**/*', '**/modules/**/*']
+  })],
   adapter: deno(),
 });
 

@@ -18,7 +18,7 @@ const { class: clazz, metaData } = Astro.props;
 		<link rel="icon" href={'/favicon.ico'} />
 		<link rel="sitemap" type="application/xml" href={'/sitemap-index.xml'} />
 
-		<meta name="author" content="Julian Cataldo, Zoltán Szőgyényi, Robert Tanislav" />
+		<meta name="author" content="Malik SI" />
 		<meta name="copyright" content="MIT" />
 		<meta property="og:image" content={envConfig.PLATFORM_DATA.logo} />
 
@@ -41,11 +41,10 @@ const { class: clazz, metaData } = Astro.props;
 
 	<body
 		class:list={[
-			// clazz, 'bg-gray-50 dark:bg-gray-800',
+			'bg-white dark:bg-slate-900',
 			'scrollbar scrollbar-w-3 scrollbar-thumb-rounded-[0.25rem]',
 			'scrollbar-track-slate-200  scrollbar-thumb-gray-400',
-			'dark:scrollbar-track-gray-900 dark:scrollbar-thumb-gray-700',
-			'dark:bg-[#111827]',
+			'dark:scrollbar-track-slate-800 dark:scrollbar-thumb-slate-600',
 		]}
 	>
 		<slot />

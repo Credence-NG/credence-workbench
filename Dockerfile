@@ -11,7 +11,18 @@ RUN deno --version
 COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
-RUN npm run build
+
+# Build with staging environment variables
+# These are baked into the Astro build at BUILD TIME
+ARG NODE_ENV=staging
+ARG PUBLIC_ENVIRONMENT=staging
+ARG PUBLIC_MODE=staging
+ENV NODE_ENV=${NODE_ENV}
+ENV PUBLIC_ENVIRONMENT=${PUBLIC_ENVIRONMENT}
+ENV PUBLIC_MODE=${PUBLIC_MODE}
+
+# Use build:staging script which respects NODE_ENV=staging
+RUN npm run build:staging
 
 # Stage 2
 FROM node:lts as prod

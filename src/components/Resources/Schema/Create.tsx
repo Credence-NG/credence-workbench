@@ -2,8 +2,8 @@
 import * as yup from 'yup';
 
 import { Button, Card, Label } from 'flowbite-react';
-import { Field,	FieldArray, Form, Formik} from 'formik';
-import type { FormikErrors,	FormikProps } from 'formik';
+import { Field, FieldArray, Form, Formik } from 'formik';
+import type { FormikErrors, FormikProps } from 'formik';
 import {
 	apiStatusCodes,
 	schemaVersionRegex,
@@ -58,7 +58,7 @@ const CreateSchema = () => {
 		type: 'reset',
 	});
 	const [loading, setLoading] = useState<boolean>(false);
-    const [schemaTypeValues, setSchemaTypeValues]= useState<SchemaTypeValue>()
+	const [schemaTypeValues, setSchemaTypeValues] = useState<SchemaTypeValue>()
 	const [type, setType] = useState<SchemaType>();
 
 	const initFormData: IFormData = {
@@ -118,18 +118,19 @@ const CreateSchema = () => {
 		const { data } = response as AxiosResponse;
 
 		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
-			const did = data?.data?.org_agents?.[0]?.orgDid;
+			// org_agents is an object, not an array
+			const did = data?.data?.org_agents?.orgDid;
 			if (did) {
 				if (did.includes(DidMethod.INDY)) {
-					setSchemaTypeValues(SchemaTypeValue.INDY);				
+					setSchemaTypeValues(SchemaTypeValue.INDY);
 					setType(SchemaType.INDY);
 				} else if (did.includes(DidMethod.POLYGON)) {
 					setType(SchemaType.W3C);
-					setSchemaTypeValues(SchemaTypeValue.POLYGON);				
+					setSchemaTypeValues(SchemaTypeValue.POLYGON);
 				}
 				else if (did.includes(DidMethod.KEY) || (did.includes(DidMethod.WEB))) {
 					setType(SchemaType.W3C);
-					setSchemaTypeValues(SchemaTypeValue.NO_LEDGER);				
+					setSchemaTypeValues(SchemaTypeValue.NO_LEDGER);
 				}
 			}
 		} else {
@@ -153,7 +154,7 @@ const CreateSchema = () => {
 				...(type === SchemaType.W3C && { schemaType: schemaTypeValues }),
 				...(type === SchemaType.INDY && { schemaVersion: values.schemaVersion }),
 				attributes: values.attribute,
-				description:values.schemaName,
+				description: values.schemaName,
 				orgId: orgId,
 			}
 		};
@@ -233,70 +234,70 @@ const CreateSchema = () => {
 			setCreateLoader(false);
 		}, 2000);
 	};
-	
+
 	const formTitle = isEcosystemData?.isEcosystemMember
-	? 'Schema Endorsement'
-	: 'Create Schema';
+		? 'Schema Endorsement'
+		: 'Create Schema';
 	const submitButtonTitle = isEcosystemData?.isEcosystemMember
 		? {
-				title: 'Request Endorsement',
-				svg: (
+			title: 'Request Endorsement',
+			svg: (
+				<svg
+					className="mr-2 mt-1"
+					xmlns="http://www.w3.org/2000/svg"
+					width="20"
+					height="20"
+					fill="none"
+					viewBox="0 0 25 25"
+				>
+					<path
+						fill="currentColor"
+						d="M21.094 0H3.906A3.906 3.906 0 0 0 0 3.906v12.5a3.906 3.906 0 0 0 3.906 3.907h.781v3.906a.781.781 0 0 0 1.335.553l4.458-4.46h10.614A3.906 3.906 0 0 0 25 16.407v-12.5A3.907 3.907 0 0 0 21.094 0Zm2.343 16.406a2.343 2.343 0 0 1-2.343 2.344H10.156a.782.782 0 0 0-.553.228L6.25 22.333V19.53a.781.781 0 0 0-.781-.781H3.906a2.344 2.344 0 0 1-2.344-2.344v-12.5a2.344 2.344 0 0 1 2.344-2.344h17.188a2.343 2.343 0 0 1 2.343 2.344v12.5Zm-3.184-5.951a.81.81 0 0 1-.17.254l-3.125 3.125a.781.781 0 0 1-1.105-1.106l1.792-1.79h-7.489a2.343 2.343 0 0 0-2.344 2.343.781.781 0 1 1-1.562 0 3.906 3.906 0 0 1 3.906-3.906h7.49l-1.793-1.79a.78.78 0 0 1 .254-1.277.781.781 0 0 1 .852.17l3.125 3.125a.79.79 0 0 1 .169.852Z"
+					/>
+				</svg>
+			),
+		}
+		: {
+			title: 'Create',
+			svg: (
+				<div className="pr-3">
 					<svg
-						className="mr-2 mt-1"
 						xmlns="http://www.w3.org/2000/svg"
-						width="20"
-						height="20"
+						width="15"
+						height="15"
 						fill="none"
-						viewBox="0 0 25 25"
+						viewBox="0 0 24 24"
 					>
 						<path
 							fill="currentColor"
-							d="M21.094 0H3.906A3.906 3.906 0 0 0 0 3.906v12.5a3.906 3.906 0 0 0 3.906 3.907h.781v3.906a.781.781 0 0 0 1.335.553l4.458-4.46h10.614A3.906 3.906 0 0 0 25 16.407v-12.5A3.907 3.907 0 0 0 21.094 0Zm2.343 16.406a2.343 2.343 0 0 1-2.343 2.344H10.156a.782.782 0 0 0-.553.228L6.25 22.333V19.53a.781.781 0 0 0-.781-.781H3.906a2.344 2.344 0 0 1-2.344-2.344v-12.5a2.344 2.344 0 0 1 2.344-2.344h17.188a2.343 2.343 0 0 1 2.343 2.344v12.5Zm-3.184-5.951a.81.81 0 0 1-.17.254l-3.125 3.125a.781.781 0 0 1-1.105-1.106l1.792-1.79h-7.489a2.343 2.343 0 0 0-2.344 2.343.781.781 0 1 1-1.562 0 3.906 3.906 0 0 1 3.906-3.906h7.49l-1.793-1.79a.78.78 0 0 1 .254-1.277.781.781 0 0 1 .852.17l3.125 3.125a.79.79 0 0 1 .169.852Z"
+							d="M21.89 9.89h-7.78V2.11a2.11 2.11 0 1 0-4.22 0v7.78H2.11a2.11 2.11 0 1 0 0 4.22h7.78v7.78a2.11 2.11 0 1 0 4.22 0v-7.78h7.78a2.11 2.11 0 1 0 0-4.22Z"
 						/>
 					</svg>
-				),
-		  }
-		: {
-				title: 'Create',
-				svg: (
-					<div className="pr-3">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="15"
-							height="15"
-							fill="none"
-							viewBox="0 0 24 24"
-						>
-							<path
-								fill="currentColor"
-								d="M21.89 9.89h-7.78V2.11a2.11 2.11 0 1 0-4.22 0v7.78H2.11a2.11 2.11 0 1 0 0 4.22h7.78v7.78a2.11 2.11 0 1 0 4.22 0v-7.78h7.78a2.11 2.11 0 1 0 0-4.22Z"
-							/>
-						</svg>
-					</div>
-				),
-		  };
-
-		  const confirmCreateSchema = () => {
-			if (
-				isEcosystemData?.isEnabledEcosystem &&
-				isEcosystemData?.isEcosystemMember
-			) {
-				submitSchemaCreationRequest(formData);
-			} else {
-				formData.attribute.forEach((element: any) => {
-					if (!element.schemaDataType) {
-						element.schemaDataType = 'string';
-					}
-				});
-				const updatedAttribute: Array<Number> = [];
-				formData.attribute.forEach((element) => {
-					updatedAttribute.push(Number(element));
-				});
-	
-				submit(formData);
-			}
+				</div>
+			),
 		};
-	
+
+	const confirmCreateSchema = () => {
+		if (
+			isEcosystemData?.isEnabledEcosystem &&
+			isEcosystemData?.isEcosystemMember
+		) {
+			submitSchemaCreationRequest(formData);
+		} else {
+			formData.attribute.forEach((element: any) => {
+				if (!element.schemaDataType) {
+					element.schemaDataType = 'string';
+				}
+			});
+			const updatedAttribute: Array<Number> = [];
+			formData.attribute.forEach((element) => {
+				updatedAttribute.push(Number(element));
+			});
+
+			submit(formData);
+		}
+	};
+
 	const validSameAttribute = (
 		formikHandlers: FormikProps<IFormData>,
 		index: number,
@@ -374,16 +375,16 @@ const CreateSchema = () => {
 
 	let filteredOptions: any[] = [];
 
-if (
-  schemaTypeValues === SchemaTypeValue.POLYGON ||
-  schemaTypeValues === SchemaTypeValue.NO_LEDGER
-) {
-  filteredOptions = options.filter(
-    (opt) => opt.label === 'String' || opt.label === 'Number'
-  );
-} else if (schemaTypeValues === SchemaTypeValue.INDY) {
-  filteredOptions = options;
-}
+	if (
+		schemaTypeValues === SchemaTypeValue.POLYGON ||
+		schemaTypeValues === SchemaTypeValue.NO_LEDGER
+	) {
+		filteredOptions = options.filter(
+			(opt) => opt.label === 'String' || opt.label === 'Number'
+		);
+	} else if (schemaTypeValues === SchemaTypeValue.INDY) {
+		filteredOptions = options;
+	}
 
 	return (
 		<div className="pt-2">
@@ -403,13 +404,13 @@ if (
 								schemaName: yup.string().trim().required('Schema is required'),
 								...(type === SchemaType.INDY && {
 									schemaVersion: yup
-									  .string()
-									  .matches(
-										schemaVersionRegex,
-										'Enter valid schema version (eg. 0.1 or 0.0.1)'
-									  )
-									  .required('Schema version is required'),
-								  }),
+										.string()
+										.matches(
+											schemaVersionRegex,
+											'Enter valid schema version (eg. 0.1 or 0.0.1)'
+										)
+										.required('Schema version is required'),
+								}),
 								attribute: yup
 									.array()
 									.of(
@@ -466,8 +467,8 @@ if (
 													className="w-full bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
 												/>
 												{formikHandlers.errors &&
-												formikHandlers.touched.schemaName &&
-												formikHandlers.errors.schemaName ? (
+													formikHandlers.touched.schemaName &&
+													formikHandlers.errors.schemaName ? (
 													<label className="text-red-500 text-xs h-5">
 														{formikHandlers.errors.schemaName}
 													</label>
@@ -477,38 +478,38 @@ if (
 											</div>
 										</div>
 										{
-												type === SchemaType.INDY &&
+											type === SchemaType.INDY &&
 
-<div
-											className="md:w-1/3 sm:w-full md:w-96 flex-col md:flex"
-											style={{ marginLeft: 0 }}
-										 >
-											<div className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-												<Label htmlFor="schema" value="Version" />
-												<span className="text-red-600">*</span>
+											<div
+												className="md:w-1/3 sm:w-full md:w-96 flex-col md:flex"
+												style={{ marginLeft: 0 }}
+											>
+												<div className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+													<Label htmlFor="schema" value="Version" />
+													<span className="text-red-600">*</span>
+												</div>
+
+												<div className="md:flex flex-col">
+													{' '}
+													<Field
+														id="schemaVersion"
+														name="schemaVersion"
+														placeholder="eg. 0.1 or 0.0.1"
+														className="w-full bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+													/>
+													{formikHandlers.errors &&
+														formikHandlers.touched.schemaVersion &&
+														formikHandlers.errors.schemaVersion ? (
+														<label className="text-red-500 text-xs h-5">
+															{formikHandlers.errors.schemaVersion}
+														</label>
+													) : (
+														<label className="text-red-500 text-xs h-5"></label>
+													)}
+												</div>
 											</div>
-											
-											<div className="md:flex flex-col">
-												{' '}
-												<Field
-													id="schemaVersion"
-													name="schemaVersion"
-													placeholder="eg. 0.1 or 0.0.1"
-													className="w-full bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-												/>
-												{formikHandlers.errors &&
-												formikHandlers.touched.schemaVersion &&
-												formikHandlers.errors.schemaVersion ? (
-													<label className="text-red-500 text-xs h-5">
-														{formikHandlers.errors.schemaVersion}
-													</label>
-												) : (
-													<label className="text-red-500 text-xs h-5"></label>
-												)}
-											</div>
-										</div>
 										}
-										
+
 									</div>
 									<p className="mt-2 text-gray-700 font-normal dark:text-gray-200 text-sm">
 										You must select at least one attribute to create schema
@@ -520,8 +521,8 @@ if (
 												const { values } = form;
 												const { attribute } = values;
 
-												 const areFirstInputsSelected =
-												type === SchemaType.INDY ? values.schemaName && values.schemaVersion : values.schemaName;
+												const areFirstInputsSelected =
+													type === SchemaType.INDY ? values.schemaName && values.schemaVersion : values.schemaName;
 												return (
 													<div className="relative flex flex-col dark:bg-gray-800">
 														{attribute?.map(
@@ -563,21 +564,21 @@ if (
 																					index,
 																					'attributeName',
 																				) && (
-																					<label className="text-red-500 text-xs h-5">
-																						Attribute name already exists
-																					</label>
-																				)}
+																						<label className="text-red-500 text-xs h-5">
+																							Attribute name already exists
+																						</label>
+																					)}
 																				{formikHandlers.touched.attribute &&
-																				attribute[index] &&
-																				formikHandlers?.errors?.attribute &&
-																				formikHandlers?.errors?.attribute[
+																					attribute[index] &&
+																					formikHandlers?.errors?.attribute &&
+																					formikHandlers?.errors?.attribute[
 																					index
-																				] &&
-																				formikHandlers?.touched?.attribute[
-																					index
-																				]?.attributeName &&
-																				formikHandlers?.errors?.attribute[index]
-																					?.attributeName ? (
+																					] &&
+																					formikHandlers?.touched?.attribute[
+																						index
+																					]?.attributeName &&
+																					formikHandlers?.errors?.attribute[index]
+																						?.attributeName ? (
 																					<label className="text-red-500 text-xs h-5">
 																						{
 																							formikHandlers?.errors?.attribute[
@@ -604,7 +605,7 @@ if (
 																							<option
 																								key={opt.value}
 																								className="py-2"
-																							value={opt.value}
+																								value={opt.value}
 																							>
 																								{opt.label}
 																							</option>
@@ -612,16 +613,16 @@ if (
 																					})}
 																				</Field>
 																				{formikHandlers?.touched?.attribute &&
-																				attribute[index] &&
-																				formikHandlers?.errors?.attribute &&
-																				formikHandlers?.errors?.attribute[
+																					attribute[index] &&
+																					formikHandlers?.errors?.attribute &&
+																					formikHandlers?.errors?.attribute[
 																					index
-																				] &&
-																				formikHandlers?.touched?.attribute[
-																					index
-																				]?.schemaDataType &&
-																				formikHandlers?.errors?.attribute[index]
-																					?.schemaDataType ? (
+																					] &&
+																					formikHandlers?.touched?.attribute[
+																						index
+																					]?.schemaDataType &&
+																					formikHandlers?.errors?.attribute[index]
+																						?.schemaDataType ? (
 																					<label className="text-red-500 text-xs h-5">
 																						{
 																							formikHandlers?.errors?.attribute[
@@ -646,22 +647,22 @@ if (
 																					index,
 																					'displayName',
 																				) && (
-																					<label className="text-red-500 text-xs h-5">
-																						Display name of attribute already
-																						exists
-																					</label>
-																				)}
+																						<label className="text-red-500 text-xs h-5">
+																							Display name of attribute already
+																							exists
+																						</label>
+																					)}
 																				{formikHandlers?.touched?.attribute &&
-																				attribute[index] &&
-																				formikHandlers?.errors?.attribute &&
-																				formikHandlers?.errors?.attribute[
+																					attribute[index] &&
+																					formikHandlers?.errors?.attribute &&
+																					formikHandlers?.errors?.attribute[
 																					index
-																				] &&
-																				formikHandlers?.touched?.attribute[
-																					index
-																				]?.displayName &&
-																				formikHandlers?.errors?.attribute[index]
-																					?.displayName ? (
+																					] &&
+																					formikHandlers?.touched?.attribute[
+																						index
+																					]?.displayName &&
+																					formikHandlers?.errors?.attribute[index]
+																						?.displayName ? (
 																					<label className="text-red-500 text-xs h-5">
 																						{
 																							formikHandlers?.errors?.attribute[
@@ -700,11 +701,10 @@ if (
 																					}}
 																				/>
 																				<span
-																					className={`${
-																						!areFirstInputsSelected
-																							? 'text-gray-400'
-																							: 'text-gray-700 dark:text-gray-200'
-																					} text-sm`}
+																					className={`${!areFirstInputsSelected
+																						? 'text-gray-400'
+																						: 'text-gray-700 dark:text-gray-200'
+																						} text-sm`}
 																				>
 																					{' '}
 																					Required
@@ -717,7 +717,7 @@ if (
 																			style={{ width: '5%' }}
 																		>
 																			{index === 0 &&
-																			values.attribute.length === 1 ? (
+																				values.attribute.length === 1 ? (
 																				<div
 																					key={element.id}
 																					className="sm:w-0.5/3 text-red-600"
@@ -732,12 +732,11 @@ if (
 																						type="button"
 																						color="danger"
 																						onClick={() => remove(index)}
-																						className={`${
-																							index === 0 &&
+																						className={`${index === 0 &&
 																							values.attribute.length === 1
-																								? 'hidden'
-																								: 'block'
-																						} flex justify-end focus:ring-0`}
+																							? 'hidden'
+																							: 'block'
+																							} flex justify-end focus:ring-0`}
 																					>
 																						<svg
 																							xmlns="http://www.w3.org/2000/svg"
@@ -760,19 +759,19 @@ if (
 																		<div className="absolute bottom-[-36px] left-6">
 																			<span>
 																				{formikHandlers?.touched?.attribute &&
-																				attribute[index] &&
-																				formikHandlers?.errors?.attribute &&
-																				formikHandlers?.errors?.attribute[
+																					attribute[index] &&
+																					formikHandlers?.errors?.attribute &&
+																					formikHandlers?.errors?.attribute[
 																					index
-																				] &&
-																				formikHandlers?.touched?.attribute[
-																					index
-																				]?.isRequired &&
-																				formikHandlers?.errors?.attribute[index]
-																					?.isRequired &&
-																				!attribute.some(
-																					(item: { isRequired: boolean; }) => item.isRequired === true,
-																				) ? (
+																					] &&
+																					formikHandlers?.touched?.attribute[
+																						index
+																					]?.isRequired &&
+																					formikHandlers?.errors?.attribute[index]
+																						?.isRequired &&
+																					!attribute.some(
+																						(item: { isRequired: boolean; }) => item.isRequired === true,
+																					) ? (
 																					<label className="text-red-500 text-xs h-5">
 																						{
 																							formikHandlers?.errors?.attribute[
@@ -855,7 +854,7 @@ if (
 											onClick={() =>
 												setShowPopup({ show: true, type: 'reset' })
 											}
-										 >
+										>
 											<svg
 												xmlns="http://www.w3.org/2000/svg"
 												className="mr-2 dark:text-white dark:group-hover:text-primary-700"

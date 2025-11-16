@@ -26,23 +26,33 @@ const AgentHealth = () => {
 	const getAgentHealthDetails = async () => {
 		try {
 			const organizationId = await getFromLocalStorage(storageKeys.ORG_ID);
+			console.log('🏥 AgentHealth Component: Starting agent health check for orgId:', organizationId);
 			setOrgId(organizationId)
 			if (organizationId) {
 				const agentData = await getAgentHealth(organizationId);
 				const { data } = agentData as AxiosResponse;
+				console.log('🏥 AgentHealth Component: Received agent health response:', {
+					statusCode: data?.statusCode,
+					agentDetails: data?.data,
+					isInitialized: data?.data?.isInitialized,
+					endpoints: data?.data?.endpoints,
+					timestamp: new Date().toISOString()
+				});
 				if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
 					setAgentHealthDetails(data?.data);
 					setLoader(false);
+					console.log('✅ AgentHealth Component: Agent health check completed successfully');
 				} else {
+					console.warn('⚠️ AgentHealth Component: Agent health check failed with status:', data?.statusCode);
 					setLoader(false);
 				}
 			} else {
-				console.error('Organization not created yet');
+				console.error('❌ AgentHealth Component: Organization not created yet');
 				setLoader(false);
 			}
 		} catch (error) {
 			setLoader(false);
-			console.error('An error occurred:', error);
+			console.error('❌ AgentHealth Component: An error occurred during agent health check:', error);
 		}
 	};
 	return (

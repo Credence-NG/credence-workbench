@@ -4,6 +4,6 @@ credentials-file: /Users/itopa/.cloudflared/038b9d74-1d85-4cbf-89bd-118383b06364
 ingress:
   # Frontend application - Studio UI
   - hostname: studio.confamd.com
-    service: http://localhost:3000
+    service: http://localhost:8085
   # Catch-all rule
   - service: http_status:404

@@ -56,29 +56,39 @@ const Dashboard = () => {
 		const roles = orgRoles.split(',');
 		setUserRoles(roles);
 	};
-	
+
 	useEffect(() => {
 		getUserRoles();
 	}, []);
 
-	
+
 	const fetchOrganizationDetails = async () => {
 		setLoading(true);
 		const orgId = await getFromLocalStorage(storageKeys.ORG_ID);
 		const orgInfoData = await getFromLocalStorage(storageKeys.ORG_INFO);
 		const response = await getOrganizationById(orgId as string);
 		const { data } = response as AxiosResponse;
+		console.log('Organization Data Malik:', data);
+
 		setLoading(false)
-		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {			
-			
-			if (data?.data?.org_agents?.length > 0 && data?.data?.org_agents[0]?.orgDid) {
+		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
+
+			const orgAgentsData = data?.data?.org_agents;
+			console.log('🤖 Organization org_agents (Malik):', orgAgentsData);
+
+			// Check if org_agents exists (it's an object, not an array)
+			if (orgAgentsData && typeof orgAgentsData === 'object' && orgAgentsData.orgDid) {
 				setWalletStatus(true);
+				console.log('✅ Organization Wallet Status (Malik):', orgAgentsData.walletStatus);
+				console.log('✅ Organization Wallet - OrgDID (Malik):', orgAgentsData.orgDid);
+			} else {
+				console.log('❌ No wallet found for organization (Malik)');
 			}
-			
+
 			setOrgData(data?.data);
-				
+
 			const organizationData = orgInfoData ? JSON.parse(orgInfoData) : {};
-			const {id, name, description, logoUrl} = data?.data || {};
+			const { id, name, description, logoUrl } = data?.data || {};
 			const orgInfo = {
 				...organizationData,
 				...id && { id },
@@ -86,6 +96,7 @@ const Dashboard = () => {
 				...description && { description },
 				...logoUrl && { logoUrl }
 			}
+			//console.log('Organization Info(Malik):', orgInfo);
 			await setToLocalStorage(storageKeys.ORG_INFO, orgInfo);
 
 		} else {
@@ -96,42 +107,42 @@ const Dashboard = () => {
 
 	const fetchEcosystems = async () => {
 		let organizationId = await getFromLocalStorage(storageKeys.ORG_ID);
-	  
+
 		if (organizationId) {
-		  const response = await getEcosystems(
-			organizationId,
-			currentPage.pageNumber,
-			currentPage.pageSize,
-			'',
-		);
-		  const { data } = response as AxiosResponse;	  
-		  if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
-			setEcoCount(data?.data?.totalItems);
-			const ecosystems = data?.data?.ecosystemList;
-			let isLead = false;
-	  
-			ecosystems.forEach((ecosystem: any) => {
-			  ecosystem.ecosystemOrgs.forEach((org: any) => {
-				const role = org.ecosystemRole?.name;
-				if (role === 'Ecosystem Lead') {
-				  isLead = true;
+			const response = await getEcosystems(
+				organizationId,
+				currentPage.pageNumber,
+				currentPage.pageSize,
+				'',
+			);
+			const { data } = response as AxiosResponse;
+			if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
+				setEcoCount(data?.data?.totalItems);
+				const ecosystems = data?.data?.ecosystemList;
+				let isLead = false;
+
+				ecosystems.forEach((ecosystem: any) => {
+					ecosystem.ecosystemOrgs.forEach((org: any) => {
+						const role = org.ecosystemRole?.name;
+						if (role === 'Ecosystem Lead') {
+							isLead = true;
+						}
+					});
+				});
+				if (!isLead && ecoCount > 0) {
+					setRedirectToEndorsment(true);
 				}
-			  });
-			});
-			if (!isLead && ecoCount > 0) {
-			  setRedirectToEndorsment(true);
+			} else {
+				setError(response as string);
 			}
-		  } else {
-			setError(response as string);
-		  }
 		}
-	  };  
-	
+	};
+
 
 	const fetchOrganizationDashboard = async () => {
 		setLoading(true);
 		const orgId = await getFromLocalStorage(storageKeys.ORG_ID);
-		if(orgId){
+		if (orgId) {
 			const response = await getOrgDashboard(orgId as string);
 			const { data } = response as AxiosResponse;
 			setLoading(false);
@@ -143,7 +154,7 @@ const Dashboard = () => {
 			}
 		}
 		setLoading(false);
-	};	
+	};
 
 	useEffect(() => {
 		fetchOrganizationDetails();
@@ -172,11 +183,11 @@ const Dashboard = () => {
 	const redirectOrgUsers = () => {
 		window.location.href = pathRoutes.organizations.users;
 	};
-	
-		
+
+
 
 	return (
-		<div className="px-4 pt-2 w-full">
+		<div className="px-4 pt-2 w-full dark:bg-slate-900">
 			<div className="col-span-full xl:mb-2">
 				<BreadCrumbs />
 			</div>
@@ -194,30 +205,30 @@ const Dashboard = () => {
 				)}
 			</div>
 			<div className="mt-4 w-full">
-				<div className="flex flex-wrap w-full items-center justify-between p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:flex-row sm:items-center sm:w-full sm:p-6 dark:border-gray-700 dark:bg-gray-800">
+				<div className="flex flex-wrap w-full items-center justify-between p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:flex-row sm:items-center sm:w-full sm:p-6 dark:border-slate-600 dark:bg-slate-800">
 					<div className="relative w-full">
 						<div className="items-center block sm:flex flex-wrap break-normal w-full sm:space-x-4 justify-center sm:justify-start">
 							<div>
 								{orgData?.logoUrl ? (
 									<CustomAvatar className='text-violet11 leading-1 flex h-full w-full items-center justify-center bg-white text-[15px] font-medium' size="80px" src={orgData?.logoUrl} round />
 								) : (
-									<CustomAvatar className='text-violet11 leading-1 flex h-full w-full items-center justify-center bg-white text-[15px] font-medium' size="80px" name={orgData?.name} round/>
+									<CustomAvatar className='text-violet11 leading-1 flex h-full w-full items-center justify-center bg-white text-[15px] font-medium' size="80px" name={orgData?.name} round />
 								)}
 							</div>
 							<div className="sm:w-100/12rem mt-2">
 								{orgData ? (
 									<div className="break-normal">
-										<h3 className="mb-1 text-xl font-bold text-gray-900 dark:text-white">
+										<h3 className="mb-1 text-xl font-bold text-gray-900 dark:text-slate-50">
 											{orgData?.name}
 										</h3>
 
-										<p className="mb-1 text-base font-normal text-gray-900 dark:text-white break-all">
+										<p className="mb-1 text-base font-normal text-gray-900 dark:text-slate-300 break-all">
 											{orgData?.description}
 										</p>
 
-										<p className="mb-1 text-base font-normal text-gray-900 dark:text-white">
+										<p className="mb-1 text-base font-normal text-gray-900 dark:text-slate-300">
 											Profile view :
-											<span className="font-semibold">
+											<span className="font-semibold dark:text-slate-100">
 												{orgData?.publicProfile ? ' Public' : ' Private'}
 											</span>
 										</p>
@@ -227,48 +238,48 @@ const Dashboard = () => {
 								)}
 							</div>
 						</div>
-						
+
 						<div className='absolute top-0 right-0 flex' >
-						
 
-						 <div>
-                             {(userRoles.includes(Roles.OWNER) ||
-							userRoles.includes(Roles.ADMIN)) && (
-							<div className="">
-								<button type="button">
-									<svg
-										aria-hidden="true"
-										className="w-5 h-5"
-										fill="currentColor"
-										viewBox="0 0 20 20"
-										xmlns="http://www.w3.org/2000/svg"
-										color="#3558A8"
-										onClick={EditOrgDetails}
-									>
-										<path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path>
-										<path
-											fillRule="evenodd"
-											d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-											clipRule="evenodd"
-										></path>
-									</svg>
-								</button>
+
+							<div>
+								{(userRoles.includes(Roles.OWNER) ||
+									userRoles.includes(Roles.ADMIN)) && (
+										<div className="">
+											<button type="button">
+												<svg
+													aria-hidden="true"
+													className="w-5 h-5"
+													fill="currentColor"
+													viewBox="0 0 20 20"
+													xmlns="http://www.w3.org/2000/svg"
+													color="#3558A8"
+													onClick={EditOrgDetails}
+												>
+													<path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path>
+													<path
+														fillRule="evenodd"
+														d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+														clipRule="evenodd"
+													></path>
+												</svg>
+											</button>
+										</div>
+									)}
 							</div>
-						)}
+							<div>
+								{
+									userRoles.includes(Roles.OWNER) && (
+										<div className='ml-4'>
+											<button onClick={deleteOrgDetails}>
+												<img src="/images/delete_button_image.svg" width={20} height={20} alt="" />
+											</button>
+
+										</div>
+									)
+								}
+							</div>
 						</div>
-						<div>
-							{
-								userRoles.includes(Roles.OWNER) && (
-									<div className='ml-4'>
-										<button onClick={deleteOrgDetails}>
-										<img src="/images/delete_button_image.svg" width={20} height={20} alt="" />
-                                       </button>
-
-									</div>
-								)
-							}
-							</div>
-						</div>					
 					</div>
 
 					<EditOrgdetailsModal
@@ -282,34 +293,37 @@ const Dashboard = () => {
 					/>
 				</div>
 
-				<div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
+				<div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-slate-600 sm:p-6 dark:bg-slate-800">
 					<div className="grid w-full grid-cols-1 gap-4 mt-0 xl:grid-cols-3 2xl:grid-cols-3">
 						<DashboardCard
-							icon={'/images/users-icon.svg'}
-							backgroundColor="linear-gradient(279deg, #FFF -18.24%, #2F80ED -0.8%, #1F4EAD 61.45%)"
+							icon={'/images/users-dark.svg'}
+							iconDark={'/images/users-light.svg'}
+							backgroundColor="transparent"
 							label="Users"
 							value={orgDashboard?.usersCount ?? 0}
 							onClickHandler={redirectOrgUsers}
 						/>
 
 						<DashboardCard
-							icon={'/images/schema-icon.svg'}
+							icon={'/images/schema-dark.svg'}
+							iconDark={'/images/schema-light.svg'}
 							classes={!walletStatus ? 'pointer-events-none' : ''}
-							backgroundColor="linear-gradient(279deg, #FFF -28.6%, #5AC2E8 21.61%, #0054FF 68.63%)"
+							backgroundColor="transparent"
 							label="Schemas"
 							value={orgDashboard?.schemasCount ?? 0}
 							onClickHandler={() => {
 								if (walletStatus && !redirectToEndorsment) {
 									window.location.href = pathRoutes.organizations.schemas;
 								}
-								else if(walletStatus && redirectToEndorsment) {
+								else if (walletStatus && redirectToEndorsment) {
 									window.location.href = `${envConfig.PUBLIC_ECOSYSTEM_FRONT_END_URL}${pathRoutes.organizations.schemas}`
 								}
 							}}
 						/>
 						<DashboardCard
-							icon={'/images/cred-icon.svg'}
-							backgroundColor="linear-gradient(279deg, #FFF -34.06%, #FFC968 43.71%, #FEB431 111.13%)"
+							icon={'/images/cred-dark.svg'}
+							iconDark={'/images/cred-light.svg'}
+							backgroundColor="transparent"
 							label="Credentials"
 							value={orgDashboard?.credentialsCount ?? 0}
 						/>
@@ -332,7 +346,7 @@ const Dashboard = () => {
 					</div>
 				) : (
 					walletStatus === true ? (
-						<OrganizationDetails orgData={orgData}  />
+						<OrganizationDetails orgData={orgData} />
 
 					) : (
 						(userRoles.includes(Roles.OWNER) ||

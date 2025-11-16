@@ -28,6 +28,8 @@ export const RolePermissions: IPermission[] = [
       Features.EMAIL_ISSUANCE,
       Features.W3C_ISSUANCE,
       Features.VIEW_ISSUED_CREDENTIALS,
+      Features.VIEW_PENDING_REQUESTS,
+      Features.MANAGE_PENDING_REQUESTS,
       Features.VERIFICATION,
       Features.REQUEST_PROOF,
       Features.EMAIL_VERIFICATION,
@@ -44,6 +46,7 @@ export const RolePermissions: IPermission[] = [
       Features.INVITE_USERS,
       Features.SEND_INVITATION,
       Features.ECOSYSTEM_MANAGEMENT,
+      Features.VIEW_ECOSYSTEMS,
       Features.CREATE_ORG,
       Features.GENERATE_CLIENT_CREDENTIALS,
       Features.API_ACCESS,
@@ -51,6 +54,10 @@ export const RolePermissions: IPermission[] = [
       Features.VIEW_ISSUANCE_HISTORY,
       Features.RETRY_ISSUANCE,
       Features.SETTINGS, // Added settings feature
+      Features.VIEW_PENDING_REQUESTS,
+      Features.APPROVE_PENDING_REQUESTS,
+      Features.REJECT_PENDING_REQUESTS,
+      Features.VIEW_PENDING_REQUEST_DETAILS,
     ],
   },
   {
@@ -68,6 +75,8 @@ export const RolePermissions: IPermission[] = [
       Features.EMAIL_ISSUANCE,
       Features.W3C_ISSUANCE,
       Features.VIEW_ISSUED_CREDENTIALS,
+      Features.VIEW_PENDING_REQUESTS,
+      Features.MANAGE_PENDING_REQUESTS,
       Features.VERIFICATION,
       Features.REQUEST_PROOF,
       Features.EMAIL_VERIFICATION,
@@ -81,7 +90,14 @@ export const RolePermissions: IPermission[] = [
       Features.EDIT_USER_ROLES,
       Features.INVITE_USERS,
       Features.SEND_INVITATION,
+      Features.VIEW_ECOSYSTEMS,
       Features.VIEW_ISSUED_CREDENTIALS,
+      Features.API_ACCESS, // Added API access for org admins
+      Features.SETTINGS, // Added settings feature for admin access
+      Features.VIEW_PENDING_REQUESTS,
+      Features.APPROVE_PENDING_REQUESTS,
+      Features.REJECT_PENDING_REQUESTS,
+      Features.VIEW_PENDING_REQUEST_DETAILS,
     ],
   },
   {
@@ -101,6 +117,11 @@ export const RolePermissions: IPermission[] = [
       Features.VIEW_ISSUANCE_HISTORY,
       Features.RETRY_ISSUANCE,
       Features.VIEW_ISSUED_CREDENTIALS, // --- IGNORE ---
+      Features.VIEW_ECOSYSTEMS,
+      Features.VIEW_PENDING_REQUESTS,
+      Features.APPROVE_PENDING_REQUESTS,
+      Features.REJECT_PENDING_REQUESTS,
+      Features.VIEW_PENDING_REQUEST_DETAILS,
     ],
   },
   {
@@ -114,6 +135,7 @@ export const RolePermissions: IPermission[] = [
       Features.EMAIL_VERIFICATION, // ✅ Can do email verification
       Features.W3C_VERIFICATION, // ✅ Can do W3C verification
       Features.VERIFY_CREDENTIALS, // ✅ Can verify credentials
+      Features.VIEW_ECOSYSTEMS,
     ],
   },
   {
@@ -124,6 +146,7 @@ export const RolePermissions: IPermission[] = [
       Features.VIEW_WALLET_DETAILS, // ✅ Allow access to /organizations/dashboard
       Features.VIEW_CONNECTIONS,
       Features.SEND_INVITATION,
+      Features.VIEW_ECOSYSTEMS,
     ],
   },
   {
@@ -134,6 +157,7 @@ export const RolePermissions: IPermission[] = [
       Features.VIEW_WALLET_DETAILS, // ✅ Allow access to /organizations/dashboard
       Features.VIEW_CONNECTIONS,
       Features.SEND_INVITATION,
+      Features.REGISTER_ORGANIZATION, // ✅ Allow organization registration
     ],
   },
 ];

@@ -1,0 +1,12 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simple, bold user icon for dark mode -->
+  <circle cx="60" cy="40" r="20" fill="#e5e7eb"/>
+  <path d="M60 65c-25 0-45 15-45 35v15h90v-15c0-20-20-35-45-35z" fill="#e5e7eb"/>
+  
+  <!-- Additional users -->
+  <circle cx="30" cy="45" r="15" fill="#d1d5db"/>
+  <path d="M30 65c-15 0-25 10-25 20v10h25c0-10 5-20 15-25h-15z" fill="#d1d5db"/>
+  
+  <circle cx="90" cy="45" r="15" fill="#d1d5db"/>
+  <path d="M90 65c15 0 25 10 25 20v10h-25c0-10-5-20-15-25h15z" fill="#d1d5db"/>
+</svg>

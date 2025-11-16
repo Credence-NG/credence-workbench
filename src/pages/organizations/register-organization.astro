@@ -1,0 +1,64 @@
+---
+import LayoutSidebar from '../../app/LayoutSidebar.astro';
+import MultiStepRegisterOrganization from '../../components/organization/MultiStepRegisterOrganization';
+import { checkUserSession } from '../../utils/check-session-feature';
+
+export const prerender = false;
+
+// Debug logging
+console.log("🚨🚨🚨 ORGANIZATION REGISTRATION PAGE REACHED! 🚨🚨🚨");
+console.log("ORG REGISTRATION: URL pathname:", Astro.url.pathname);
+
+// Basic session check for enhanced registration flow
+const response = await checkUserSession(Astro.request, Astro.url.pathname);
+console.log("ORG REGISTRATION: Session check response:", { authorized: response.authorized, permitted: response.permitted, redirect: response.redirect });
+
+// If not authorized at all, redirect to sign-in
+if (!response.authorized) {
+  console.log("ORG REGISTRATION: Not authorized, redirecting to sign-in");
+  return Astro.redirect('/authentication/sign-in');
+}
+
+// Check if user is a platform admin or owner who shouldn't be on this page
+const cookieHeader = Astro.request.headers.get("cookie");
+if (cookieHeader) {
+  const parseCookies = (cookieString: string) => {
+    const cookies: Record<string, string> = {};
+    cookieString.split(";").forEach((cookie) => {
+      const [name, value] = cookie.trim().split("=");
+      if (name && value) {
+        cookies[name] = decodeURIComponent(value);
+      }
+    });
+    return cookies;
+  };
+
+  const cookies = parseCookies(cookieHeader);
+  const userRoles = cookies.user_roles;
+  const role = cookies.role;
+  const orgId = cookies.org_id;
+
+  console.log("ORG REGISTRATION: User context:", { role, userRoles, hasOrgId: !!orgId });
+
+  // Platform admins and owners should go to dashboard instead
+  if (role === "platform_admin" || userRoles?.includes("owner")) {
+    console.log("ORG REGISTRATION: Admin/Owner user detected, redirecting to dashboard");
+    return Astro.redirect('/dashboard');
+  }
+
+  // Users who already have an organization should go to dashboard
+  if (orgId && userRoles && userRoles !== "holder") {
+    console.log("ORG REGISTRATION: User already has organization, redirecting to dashboard");
+    return Astro.redirect('/dashboard');
+  }
+}
+---
+
+<LayoutSidebar 
+  title="Register Organization"
+  description="Submit your organization for platform approval"
+>
+  <main>
+    <MultiStepRegisterOrganization client:load />
+  </main>
+</LayoutSidebar>

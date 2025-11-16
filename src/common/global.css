@@ -13,6 +13,36 @@
 	height: calc(100% - 1.25rem);
 }
 
+/* Smooth animations for better UX */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.animate-fadeIn {
+	animation: fadeIn 0.3s ease-out;
+}
+
+/* Pulse animation for loading states */
+@keyframes pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}
+
+.animate-pulse {
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 input {
 	@apply focus:!ring-primary-700 focus:!border-primary-700 focus-visible:!ring-primary-700 focus-visible:!border-primary-700;
 }
@@ -119,7 +149,7 @@ ul.timelinestatic {
 }
 
 .search-dropdown .select__control .select__indicators {
-	@apply flex dark:bg-gray-900;
+	@apply flex dark:bg-slate-800;
 }
 
 .search-dropdown .select__control .select__placeholder {
@@ -132,7 +162,7 @@ ul.timelinestatic {
 }
 
 .select__single-value {
-	@apply dark:!text-white !text-primary-700 w-fit;
+	@apply dark:!text-slate-50 !text-primary-700 w-fit;
 }
 
 .email-bulk-issuance .select__single-value {
@@ -148,7 +178,7 @@ ul.timelinestatic {
 .search-dropdown {
 	max-width: 30rem;
 	border: #1f4ead;
-	@apply dark:text-primary-500 dark:bg-primary-700;
+	@apply dark:text-slate-200 dark:bg-slate-800;
 }
 .search-dropdown .select__control .select__control--is-focused {
 	box-shadow: #1f4ead !important;
@@ -162,11 +192,11 @@ ul.timelinestatic {
 }
 
 .search-dropdown .select__control {
-	@apply dark:bg-gray-900;
+	@apply dark:bg-slate-800;
 }
 
 .select__menu {
-	@apply dark:bg-gray-900;
+	@apply dark:bg-slate-800;
 }
 
 .search-dropdown
@@ -209,4 +239,104 @@ ul.timelinestatic {
 
 .w-issuer-id {
     width: calc(100% - 5.6rem);
+}
+
+/* Professional Dark Mode Color System */
+
+/* Base Colors:
+ * Background: slate-900 (darkest)
+ * Surface: slate-800 (cards, panels)
+ * Surface Secondary: slate-700 (elevated elements) 
+ * Borders: slate-600 (subtle borders)
+ * Text Primary: slate-100 (main text)
+ * Text Secondary: slate-300 (secondary text)
+ * Text Muted: slate-400 (muted text)
+ */
+
+/* Global overrides for professional consistency */
+.dark {
+	/* Main backgrounds */
+	--dark-bg-primary: rgb(15 23 42);    /* slate-900 */
+	--dark-bg-surface: rgb(30 41 59);    /* slate-800 */
+	--dark-bg-surface-2: rgb(51 65 85);  /* slate-700 */
+	--dark-bg-elevated: rgb(71 85 105);  /* slate-600 */
+	
+	/* Text colors */
+	--dark-text-primary: rgb(248 250 252);   /* slate-50 */
+	--dark-text-secondary: rgb(203 213 225); /* slate-300 */
+	--dark-text-muted: rgb(148 163 184);     /* slate-400 */
+	
+	/* Borders and dividers */
+	--dark-border-primary: rgb(71 85 105);   /* slate-600 */
+	--dark-border-secondary: rgb(51 65 85);  /* slate-700 */
+	
+	/* Interactive states */
+	--dark-hover-surface: rgb(71 85 105);    /* slate-600 */
+	--dark-hover-elevated: rgb(100 116 139); /* slate-500 */
+}
+
+/* Component overrides */
+
+/* Light mode text colors */
+.text-gray-900 {
+	color: rgb(17 24 39) !important; /* gray-900 */
+}
+
+.text-gray-600 {
+	color: rgb(75 85 99) !important; /* gray-600 */
+}
+
+.text-gray-500 {
+	color: rgb(107 114 128) !important; /* gray-500 */
+}
+
+.dark .bg-white {
+	background-color: var(--dark-bg-surface) !important;
+}
+
+.dark .bg-gray-50 {
+	background-color: var(--dark-bg-surface-2) !important;
+}
+
+.dark .text-gray-900 {
+	color: var(--dark-text-primary) !important;
+}
+
+.dark .text-gray-500 {
+	color: var(--dark-text-secondary) !important;
+}
+
+.dark .text-gray-600 {
+	color: var(--dark-text-muted) !important;
+}
+
+.dark .border-gray-200 {
+	border-color: var(--dark-border-primary) !important;
+}
+
+.dark .border-gray-300 {
+	border-color: var(--dark-border-secondary) !important;
+}
+
+/* Hover states */
+.dark .hover\:bg-gray-100:hover {
+	background-color: var(--dark-hover-surface) !important;
+}
+
+.dark .hover\:bg-gray-200:hover {
+	background-color: var(--dark-hover-elevated) !important;
+}
+
+/* Breadcrumb styling */
+.dark [data-testid="flowbite-breadcrumb-item"] a {
+	color: var(--dark-text-secondary) !important;
+}
+
+.dark [data-testid="flowbite-breadcrumb-item"] a:hover {
+	color: var(--dark-text-primary) !important;
+}
+
+/* Page containers */
+.dark .px-4.pt-2 {
+	background-color: var(--dark-bg-primary) !important;
 }

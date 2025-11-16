@@ -1,0 +1,12 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main user icon -->
+  <circle cx="60" cy="35" r="18" fill="#374151" fill-opacity="0.9"/>
+  <path d="M60 58c-22 0-40 15-40 33v17c0 4 3 7 7 7h66c4 0 7-3 7-7V91c0-18-18-33-40-33z" fill="#374151" fill-opacity="0.9"/>
+  
+  <!-- Additional users in background -->
+  <circle cx="35" cy="40" r="12" fill="#374151" fill-opacity="0.6"/>
+  <path d="M35 58c-12 0-22 8-22 18v8c0 2 2 4 4 4h36c-2-5-3-11-3-17 0-5 2-9 5-13h-20z" fill="#374151" fill-opacity="0.6"/>
+  
+  <circle cx="85" cy="40" r="12" fill="#374151" fill-opacity="0.6"/>
+  <path d="M85 58c12 0 22 8 22 18v8c0 2-2 4-4 4h-36c2-5 3-11 3-17 0-5-2-9-5-13h20z" fill="#374151" fill-opacity="0.6"/>
+</svg>

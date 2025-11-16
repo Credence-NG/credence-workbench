@@ -80,21 +80,26 @@ export const checkUserSession = async ({
           authorized: false,
         };
       }
+      // Use consistent cookie options for refresh token updates
+      const cookieOptions = {
+        path: "/",
+        maxAge: 604800, // 7 days
+        httpOnly: true,
+        secure: import.meta.env.PUBLIC_ENVIRONMENT === "production",
+        sameSite: "lax" as const,
+      };
+
       setToCookies(
         cookies,
         "session",
         userSession?.data?.access_token as string,
-        {
-          path: "/",
-        }
+        cookieOptions
       );
       setToCookies(
         cookies,
         "refresh",
         userSession?.data?.refresh_token as string,
-        {
-          path: "/",
-        }
+        cookieOptions
       );
 
       return {
@@ -135,10 +140,6 @@ export const checkUserSession = async ({
   return {
     permitted: false,
     redirect: redirectPath,
-    authorized: true,
-  };
-  return {
-    permitted: true,
     authorized: true,
   };
 };

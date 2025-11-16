@@ -17,13 +17,14 @@ const { hideOrgAgent } = Astro.props;
 
 const role = getFromCookies(Astro.cookies, 'role');
 
-const permittedPages = RolePermissions.find(
+const rolePermission = RolePermissions.find(
 	(item) => item.role === role,
-)?.pages;
+);
+const userFeatures = rolePermission?.features || [];
 ---
 
 <nav
-	class="fixed z-30 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700"
+	class="fixed z-30 w-full bg-white border-b border-gray-200 dark:bg-slate-800 dark:border-slate-700"
 >
 	<div class="px-3 py-3 lg:px-5 lg:pl-3">
 		<div class="flex items-center justify-between">
@@ -33,9 +34,11 @@ const permittedPages = RolePermissions.find(
 					!hideOrgAgent && (
 						<button
 							id="toggleSidebarMobile"
+							data-drawer-target="sidebar"
+							data-drawer-toggle="sidebar"
 							aria-expanded="true"
 							aria-controls="sidebar"
-							class="p-2 text-gray-600 rounded cursor-pointer lg:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 dark:focus:bg-gray-700 focus:ring-2 focus:ring-gray-100 dark:focus:ring-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+							class="p-2 text-gray-600 rounded cursor-pointer lg:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 dark:focus:bg-slate-700 focus:ring-2 focus:ring-gray-100 dark:focus:ring-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-50"
 						>
 							<svg
 								id="toggleSidebarMobileHamburger"
@@ -67,8 +70,7 @@ const permittedPages = RolePermissions.find(
 					)
 				}
 				<a
-					href={(permittedPages && permittedPages[0]) ||
-						pathRoutes.users.dashboard}
+					href={pathRoutes.users.dashboard}
 					class="flex ml-2 lg:mr-24 mr-2"
 				>
 					<LogoFile />
@@ -130,7 +132,7 @@ const permittedPages = RolePermissions.find(
 					</div>
 					<!-- Dropdown menu -->
 					<div
-						class="z-20 z-50 hidden max-w-sm my-4 overflow-hidden text-base list-none bg-white divide-y divide-gray-100 rounded shadow-lg dark:divide-gray-600 dark:bg-gray-700"
+						class="z-50 hidden max-w-sm my-4 overflow-hidden text-base list-none bg-white divide-y divide-gray-100 rounded shadow-lg dark:divide-gray-600 dark:bg-gray-700"
 						id="notification-dropdown"
 					>
 						<div
@@ -409,7 +411,7 @@ const permittedPages = RolePermissions.find(
 					</button>
 					<!-- Dropdown menu -->
 					<div
-						class="z-20 z-50 hidden max-w-sm my-4 overflow-hidden text-base list-none bg-white divide-y divide-gray-100 rounded shadow-lg dark:bg-gray-700 dark:divide-gray-600"
+						class="z-50 hidden max-w-sm my-4 overflow-hidden text-base list-none bg-white divide-y divide-gray-100 rounded shadow-lg dark:bg-gray-700 dark:divide-gray-600"
 						id="apps-dropdown"
 					>
 					</div>
@@ -459,23 +461,39 @@ const permittedPages = RolePermissions.find(
 									<span>Profile</span>
 								</a>
 							</li>
+							{
+								(role === "admin" || role === "platform_admin") && (
+									<li>
+										<a
+											href="/setting"
+											class="flex space-x-2 px-4 py-2 my-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+											role="menuitem"
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												width="20"
+												height="20"
+												viewBox="0 0 20 20"
+												fill="none"
+											>
+												<path
+													fill-rule="evenodd"
+													clip-rule="evenodd"
+													d="M10 2C10.5523 2 11 2.44772 11 3V4.1707C11.8327 4.37764 12.6065 4.75733 13.2678 5.27248L14.1213 4.41893C14.5118 4.02841 15.145 4.02841 15.5355 4.41893C15.9261 4.80946 15.9261 5.44262 15.5355 5.83315L14.682 6.68669C15.1971 7.34799 15.5768 8.12183 15.7838 8.95455H17C17.5523 8.95455 18 9.40226 18 9.95455C18 10.5068 17.5523 10.9545 17 10.9545H15.7838C15.5768 11.7873 15.1971 12.5611 14.682 13.2224L15.5355 14.0759C15.9261 14.4665 15.9261 15.0996 15.5355 15.4902C15.145 15.8807 14.5118 15.8807 14.1213 15.4902L13.2678 14.6366C12.6065 15.1518 11.8327 15.5315 11 15.7384V17C11 17.5523 10.5523 18 10 18C9.44772 18 9 17.5523 9 17V15.7384C8.16728 15.5315 7.39344 15.1518 6.73214 14.6366L5.87859 15.4902C5.48807 15.8807 4.8549 15.8807 4.46438 15.4902C4.07385 15.0996 4.07385 14.4665 4.46438 14.0759L5.31792 13.2224C4.80277 12.5611 4.42308 11.7873 4.21614 10.9545H3C2.44772 10.9545 2 10.5068 2 9.95455C2 9.40226 2.44772 8.95455 3 8.95455H4.21614C4.42308 8.12183 4.80277 7.34799 5.31792 6.68669L4.46438 5.83315C4.07385 5.44262 4.07385 4.80946 4.46438 4.41893C4.8549 4.02841 5.48807 4.02841 5.87859 4.41893L6.73214 5.27248C7.39344 4.75733 8.16728 4.37764 9 4.1707V3C9 2.44772 9.44772 2 10 2ZM10 8C8.89543 8 8 8.89543 8 10C8 11.1046 8.89543 12 10 12C11.1046 12 12 11.1046 12 10C12 8.89543 11.1046 8 10 8Z"
+													fill="#455A64"
+												></path>
+											</svg>
+											<span>Settings</span>
+										</a>
+									</li>
+								)
+							}
 							<li>
 								<a
-									href={pathRoutes.users.setting}
+									href={pathRoutes.users.settings}
 									class="flex space-x-2 pl-3 pr-4 py-2 my-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
 									role="menuitem"
 								>
-									<!-- <svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="25"
-										height="24"
-										viewBox="0 0 25 24"
-										fill="none"
-									>
-										<path
-											d="M10.5059 23C9.95586 23 9.48503 22.8042 9.09336 22.4125C8.70169 22.0208 8.50586 21.55 8.50586 21V18C7.95586 18 7.48503 17.8042 7.09336 17.4125C6.70169 17.0208 6.50586 16.55 6.50586 16V3C6.50586 2.45 6.70169 1.97917 7.09336 1.5875C7.48503 1.19583 7.95586 1 8.50586 1H16.5059C17.0559 1 17.5267 1.19583 17.9184 1.5875C18.31 1.97917 18.5059 2.45 18.5059 3V16C18.5059 16.55 18.31 17.0208 17.9184 17.4125C17.5267 17.8042 17.0559 18 16.5059 18V21C16.5059 21.55 16.31 22.0208 15.9184 22.4125C15.5267 22.8042 15.0559 23 14.5059 23H10.5059ZM12.5059 12.5C13.3392 12.5 14.0475 12.2083 14.6309 11.625C15.2142 11.0417 15.5059 10.3333 15.5059 9.5C15.5059 8.66667 15.2142 7.95833 14.6309 7.375C14.0475 6.79167 13.3392 6.5 12.5059 6.5C11.6725 6.5 10.9642 6.79167 10.3809 7.375C9.79753 7.95833 9.50586 8.66667 9.50586 9.5C9.50586 10.3333 9.79753 11.0417 10.3809 11.625C10.9642 12.2083 11.6725 12.5 12.5059 12.5ZM10.5059 21H14.5059V18H10.5059V21ZM8.50586 16H16.5059V3H8.50586V16ZM12.5059 10.5C12.2225 10.5 11.985 10.4042 11.7934 10.2125C11.6017 10.0208 11.5059 9.78333 11.5059 9.5C11.5059 9.21667 11.6017 8.97917 11.7934 8.7875C11.985 8.59583 12.2225 8.5 12.5059 8.5C12.7892 8.5 13.0267 8.59583 13.2184 8.7875C13.41 8.97917 13.5059 9.21667 13.5059 9.5C13.5059 9.78333 13.41 10.0208 13.2184 10.2125C13.0267 10.4042 12.7892 10.5 12.5059 10.5Z"
-											fill="#455A64"></path>
-									</svg> -->
 									<svg xmlns="http://www.w3.org/2000/svg" width="25" height="24" viewBox="0 0 25 24" fill="none">
 										<path d="M10.5059 23C9.95586 23 9.48503 22.8042 9.09336 22.4125C8.70169 22.0208 8.50586 21.55 8.50586 21V18C7.95586 18 7.48503 17.8042 7.09336 17.4125C6.70169 17.0208 6.50586 16.55 6.50586 16V3C6.50586 2.45 6.70169 1.97917 7.09336 1.5875C7.48503 1.19583 7.95586 1 8.50586 1H16.5059C17.0559 1 17.5267 1.19583 17.9184 1.5875C18.31 1.97917 18.5059 2.45 18.5059 3V16C18.5059 16.55 18.31 17.0208 17.9184 17.4125C17.5267 17.8042 17.0559 18 16.5059 18V21C16.5059 21.55 16.31 22.0208 15.9184 22.4125C15.5267 22.8042 15.0559 23 14.5059 23H10.5059ZM12.5059 12.5C13.3392 12.5 14.0475 12.2083 14.6309 11.625C15.2142 11.0417 15.5059 10.3333 15.5059 9.5C15.5059 8.66667 15.2142 7.95833 14.6309 7.375C14.0475 6.79167 13.3392 6.5 12.5059 6.5C11.6725 6.5 10.9642 6.79167 10.3809 7.375C9.79753 7.95833 9.50586 8.66667 9.50586 9.5C9.50586 10.3333 9.79753 11.0417 10.3809 11.625C10.9642 12.2083 11.6725 12.5 12.5059 12.5ZM10.5059 21H14.5059V18H10.5059V21ZM8.50586 16H16.5059V3H8.50586V16ZM12.5059 10.5C12.2225 10.5 11.985 10.4042 11.7934 10.2125C11.6017 10.0208 11.5059 9.78333 11.5059 9.5C11.5059 9.21667 11.6017 8.97917 11.7934 8.7875C11.985 8.59583 12.2225 8.5 12.5059 8.5C12.7892 8.5 13.0267 8.59583 13.2184 8.7875C13.41 8.97917 13.5059 9.21667 13.5059 9.5C13.5059 9.78333 13.41 10.0208 13.2184 10.2125C13.0267 10.4042 12.7892 10.5 12.5059 10.5Z" fill="#455A64"/>
 										</svg>

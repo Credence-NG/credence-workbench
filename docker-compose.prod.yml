@@ -1,0 +1,43 @@
+# Production overrides for docker-compose
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+version: '3.8'
+
+services:
+  app:
+    # Production optimizations
+    environment:
+      - NODE_ENV=production
+    # Remove development volumes
+    volumes:
+      - ./.env:/app/.env:ro
+    # Production resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    # Production logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  cloudflare-tunnel:
+    # Production tunnel configuration
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"

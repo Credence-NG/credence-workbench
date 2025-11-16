@@ -1,0 +1,46 @@
+---
+import LayoutStacked from '../../app/LayoutStacked.astro';
+---
+
+<LayoutStacked title="Organization Audit Logs - Admin" description="View organization approval and rejection audit trails">
+  <div id="org-audit-logs-container"></div>
+  
+  <script>
+    import { createRoot } from 'react-dom/client';
+    import React from 'react';
+    import OrganizationAuditLogs from '../../components/organization/OrganizationAuditLogs.tsx';
+    import { enforceAdminAccess, AdminFeatures } from '../../utils/adminAccess.ts';
+    
+    // Initialize the page with admin access check
+    const initializePage = async () => {
+      try {
+        // Check if user has admin approval permissions (audit logs are read-only)
+        await enforceAdminAccess(AdminFeatures.APPROVE_ORGANIZATION);
+        
+        // If we reach here, user has access
+        const container = document.getElementById('org-audit-logs-container');
+        if (container) {
+          const root = createRoot(container);
+          
+          // Get organization ID from URL if viewing specific organization logs
+          const urlParams = new URLSearchParams(window.location.search);
+          const organizationId = urlParams.get('orgId');
+          
+          root.render(React.createElement(OrganizationAuditLogs, { 
+            organizationId: organizationId || undefined 
+          }));
+        }
+      } catch (error) {
+        console.error('Access denied:', error);
+        // User will be redirected by enforceAdminAccess
+      }
+    };
+    
+    // Initialize page when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializePage);
+    } else {
+      initializePage();
+    }
+  </script>
+</LayoutStacked>

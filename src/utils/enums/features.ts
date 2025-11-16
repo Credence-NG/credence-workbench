@@ -41,6 +41,8 @@ export enum Features {
   // Credential Management
   MANAGE_CREDENTIALS = "manage_credentials",
   VIEW_ISSUED_CREDENTIALS = "view_issued_credentials",
+  VIEW_PENDING_REQUESTS = "view_pending_requests",
+  MANAGE_PENDING_REQUESTS = "manage_pending_requests",
   BULK_ISSUANCE = "bulk_issuance",
   EMAIL_ISSUANCE = "email_issuance",
   W3C_ISSUANCE = "w3c_issuance",
@@ -82,4 +84,13 @@ export enum Features {
   // Data Management
   EXPORT_DATA = "export_data",
   IMPORT_DATA = "import_data",
+
+  // Organization Registration & Approval (NEW)
+  REGISTER_ORGANIZATION = "register_organization",
+  APPROVE_ORGANIZATION = "approve_organization",
+
+  PENDING_REQUESTS = "pending_requests",
+  APPROVE_PENDING_REQUESTS = "approve_pending_requests",
+  REJECT_PENDING_REQUESTS = "reject_pending_requests",
+  VIEW_PENDING_REQUEST_DETAILS = "view_pending_request_details",
 }

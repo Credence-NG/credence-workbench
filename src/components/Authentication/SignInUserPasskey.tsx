@@ -23,6 +23,9 @@ import NavBar from './NavBar';
 import FooterBar from './FooterBar';
 import { Devices, PlatformRoles } from '../../common/enums';
 import PasskeyAlert from '../../commonComponents/PasskeyAlert';
+import { Roles } from '../../utils/enums/roles';
+import { getUserInvitations } from '../../api/invitations';
+import { checkOrganizationStatus } from '../../utils/organizationStatus';
 interface signInUserProps {
 	email: string;
 }
@@ -35,6 +38,18 @@ const SignInUserPasskey = (signInUserProps: signInUserProps) => {
 	const [failure, setFailure] = useState<string | null>(null);
 	const [success, setSuccess] = useState<string | null>(null);
 	const [isDevice, setIsDevice] = useState<boolean>(false);
+
+	// Helper function to get the first organization where user has a role (excluding platform admin)
+	const getFirstOrganizationRole = (userOrgRoles: any[]) => {
+		// Filter out platform admin roles and global roles (like holder) to get actual organization roles
+		const organizationRoles = userOrgRoles.filter(
+			(item: { orgRole: { name: string }, orgId: string | null }) =>
+				item.orgRole.name !== PlatformRoles.platformAdmin && item.orgId !== null
+		);
+
+		// Return the first organization role if any exist
+		return organizationRoles.length > 0 ? organizationRoles[0] : null;
+	};
 
 	const handleSvgClick = () => {
 		window.history.pushState(null, '', pathRoutes.auth.sinIn);
@@ -73,6 +88,11 @@ const SignInUserPasskey = (signInUserProps: signInUserProps) => {
 
 		const { data } = userDetails as AxiosResponse;
 
+		console.log('🔍 PASSKEY SIGNIN DEBUG: FULL getUserProfile response:', JSON.stringify(userDetails, null, 2));
+		console.log('🔍 PASSKEY SIGNIN DEBUG: data structure:', JSON.stringify(data, null, 2));
+		console.log('🔍 PASSKEY SIGNIN DEBUG: userOrgRoles check - length:', data?.data?.userOrgRoles?.length);
+		console.log('🔍 PASSKEY SIGNIN DEBUG: userOrgRoles array:', data?.data?.userOrgRoles);
+
 		if (data?.data?.userOrgRoles?.length > 0) {
 			// Check if user is platform admin
 			const platformAdminRole = data?.data?.userOrgRoles.find(
@@ -101,44 +121,116 @@ const SignInUserPasskey = (signInUserProps: signInUserProps) => {
 			// Store organization data for dashboard functionality
 			// Platform admin users also need org context to access dashboard features
 			if (data?.data?.userOrgRoles?.length > 0) {
-				// Get organization roles (excluding platform_admin for org context)
+				// Get organization roles (excluding platform_admin and global roles like holder)
 				const orgRoles = data?.data?.userOrgRoles
-					.filter((item: { orgRole: { name: string } }) =>
-						item.orgRole.name !== PlatformRoles.platformAdmin)
+					.filter((item: { orgRole: { name: string }, orgId: string | null }) =>
+						item.orgRole.name !== PlatformRoles.platformAdmin && item.orgId !== null)
 					.map((item: { orgRole: { name: string } }) => item.orgRole.name);
 
 				// Store organization roles and org ID for dashboard access
 				if (orgRoles.length > 0) {
 					await setToLocalStorage(storageKeys.ORG_ROLES, orgRoles.join(','));
 
-					// Get the first organization ID for context
-					const firstOrgRole = data?.data?.userOrgRoles.find(
-						(item: { orgRole: { name: string } }) =>
-							item.orgRole.name !== PlatformRoles.platformAdmin
-					);
+					// Get the first organization where user has a role
+					const firstOrgRole = getFirstOrganizationRole(data?.data?.userOrgRoles);
 
+					console.log('🔍 PASSKEY SIGNIN DEBUG: firstOrgRole selected:', firstOrgRole);
 					if (firstOrgRole?.orgId) {
+						console.log('🔍 PASSKEY SIGNIN DEBUG: About to store ORG_ID:', firstOrgRole.orgId);
 						await setToLocalStorage(storageKeys.ORG_ID, firstOrgRole.orgId);
 					}
+				} else {
+					console.log('🔍 PASSKEY SIGNIN DEBUG: No org roles found - user has no organization membership');
 				}
 			}
 
 			// Return the appropriate role for redirect logic
+			const nonPlatformAdminRoles = data?.data?.userOrgRoles?.filter(
+				(item: { orgRole: { name: string }, orgId: string | null }) =>
+					item.orgRole.name !== PlatformRoles.platformAdmin && item.orgId !== null
+			) || [];
+
 			if (platformAdminRole) {
 				// User is platform admin - return platform_admin role
 				return {
 					role: platformAdminRole.orgRole,
 				};
-			} else {
+			} else if (nonPlatformAdminRoles.length > 0) {
 				// User has organization roles (member, issuer, verifier, admin, owner)
 				// Return the first organization role (any role works for dashboard routing)
-				const firstRole = data?.data?.userOrgRoles[0]?.orgRole;
+				const firstRole = nonPlatformAdminRoles[0]?.orgRole;
+				console.log('🔍 PASSKEY SIGNIN DEBUG: Selected organization role:', firstRole);
 				return {
 					role: firstRole,
 				};
+			} else {
+				// User has no organization roles - check for invitations or redirect to registration
+				console.log('🔍 PASSKEY SIGNIN DEBUG: User has no organization roles - checking for invitations');
+
+				// Check if user has pending invitations
+				try {
+					const invitationsResponse = await getUserInvitations(1, 10, '');
+					const { data: invitationsData } = invitationsResponse as AxiosResponse;
+
+					if (invitationsData?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
+						const pendingInvitations = invitationsData?.data?.invitations?.filter(
+							(invitation: any) => invitation.status === 'pending'
+						) || [];
+
+						if (pendingInvitations.length > 0) {
+							console.log('🔍 PASSKEY SIGNIN DEBUG: User has pending invitations - redirecting to dashboard');
+							// User has pending invitations - create a temporary role to allow dashboard access
+							return {
+								role: { name: 'member' }, // Temporary role for invitation handling
+							};
+						}
+					}
+				} catch (error) {
+					console.error('🔍 PASSKEY SIGNIN DEBUG: Error checking invitations:', error);
+				}
+
+				// No organization roles and no invitations - check for pending organization before redirecting
+				try {
+					console.log('🔍 PASSKEY SIGNIN DEBUG: Checking for pending organization status...');
+					const orgStatus = await checkOrganizationStatus();
+
+					if (orgStatus.organizationStatus === 'pending') {
+						console.log('🔍 PASSKEY SIGNIN DEBUG: User has pending organization - redirecting to pending review page');
+						window.location.href = pathRoutes.organizations.pendingOrganizationReview;
+						return null;
+					}
+
+					if (orgStatus.organizationStatus === 'rejected') {
+						console.log('🔍 PASSKEY SIGNIN DEBUG: User has rejected organization - redirecting to registration for resubmission');
+						window.location.href = pathRoutes.organizations.register;
+						return null;
+					}
+				} catch (error) {
+					console.error('🔍 PASSKEY SIGNIN DEBUG: Error checking organization status:', error);
+				}
+
+				// No organization roles, no invitations, and no pending organization - redirect to organization registration
+				console.log('🔍 PASSKEY SIGNIN DEBUG: No organization roles, invitations, or pending organization - redirecting to organization registration');
+				window.location.href = pathRoutes.organizations.register;
+				return null;
 			}
 		} else {
-			setFailure(userDetails as string);
+			// Enhanced Registration Flow: User has no organization roles yet
+			// This means they are a newly registered user who needs to create an organization
+			// Assign them "holder" role as base role for organization registration access
+			console.log('New user with no organization roles - assigning holder role');
+
+			const { id, profileImg, firstName, email } = data?.data || {}
+			const userProfile = {
+				id, profileImg, firstName, email
+			}
+			await setToLocalStorage(storageKeys.USER_PROFILE, userProfile);
+			await setToLocalStorage(storageKeys.USER_EMAIL, data?.data?.email);
+			await setToLocalStorage(storageKeys.USER_ROLES, 'holder');
+
+			return {
+				role: { name: 'holder' }
+			};
 		}
 		setLoading(false);
 	};
@@ -207,8 +299,27 @@ const SignInUserPasskey = (signInUserProps: signInUserProps) => {
 
 					// Always do client-side redirect instead of relying on API redirect
 					// because middleware intercepts 302 responses and redirects back to sign-in
-					// Platform admin gets dashboard as entry page, can access platform-settings from there
-					const redirectUrl = pathRoutes.users.dashboard;
+
+					// Enhanced Registration Flow: Check if user needs to register an organization
+					const userHasOrganizations = data?.data?.userOrgRoles?.length > 0;
+					const isPlatformAdmin = data?.data?.userOrgRoles?.some(
+						(item: { orgRole: { name: string } }) =>
+							item.orgRole.name === PlatformRoles.platformAdmin
+					);
+
+					let redirectUrl: string;
+
+					if (isPlatformAdmin) {
+						// Platform admin gets dashboard as entry page, can access platform-settings from there
+						redirectUrl = pathRoutes.users.dashboard;
+					} else if (!userHasOrganizations) {
+						// New user without organizations - redirect to organization registration
+						redirectUrl = pathRoutes.organizations.registerOrganization;
+					} else {
+						// User has organizations - go to dashboard
+						redirectUrl = pathRoutes.users.dashboard;
+					}
+
 					window.location.href = redirectUrl;
 				} else if (data?.error) {
 				}

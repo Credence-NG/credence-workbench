@@ -40,8 +40,8 @@ export const ROUTE_FEATURE_MAP: RoutePattern[] = [
   },
   {
     pattern: /^\/setting/,
-    feature: Features.ACCOUNT_SETTINGS,
-    description: "User account settings",
+    feature: Features.SETTINGS,
+    description: "Admin and platform admin settings",
   },
 
   // Organization Management

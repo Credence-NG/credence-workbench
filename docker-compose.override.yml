@@ -1,0 +1,24 @@
+# Staging/Production overrides for docker-compose.yml
+# This file is automatically loaded by docker-compose
+# 
+# IMPORTANT: This file overrides docker-compose.yml settings
+# For local development, rename this file or use: docker compose -f docker-compose.yml up
+
+version: '3.8'
+
+services:
+  app:
+    # Staging configuration (override to use .env.docker settings)
+    # Remove NODE_ENV override to allow .env.docker to control environment
+    environment:
+      - NODE_ENV=staging
+      - PUBLIC_ENVIRONMENT=staging
+      - PUBLIC_MODE=staging
+    # Do NOT mount source code in staging/production
+    # volumes:
+    #   - ./src:/app/src:ro
+    #   - ./public:/app/public:ro
+
+  cloudflare-tunnel:
+    # Use production tunnel config
+    # No overrides needed

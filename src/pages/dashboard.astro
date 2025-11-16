@@ -7,9 +7,23 @@ import { checkUserSession } from '../utils/check-session-feature';
 export const prerender = false;
 
 const response = await checkUserSession(Astro.request, Astro.url.pathname);
+console.log("DASHBOARD: Full session response:", JSON.stringify(response, null, 2));
+
 if (!response.authorized) {
+	console.log("DASHBOARD: Unauthorized, redirecting to:", response.redirect);
 	return Astro.redirect(response.redirect);
 }
+
+// Handle redirects for enhanced registration flow
+if (!response.permitted && response.redirect) {
+	console.log("DASHBOARD: Enhanced registration redirect to:", response.redirect);
+	console.log("DASHBOARD: About to call Astro.redirect()");
+	const redirectResult = Astro.redirect(response.redirect);
+	console.log("DASHBOARD: Redirect result:", redirectResult);
+	return redirectResult;
+}
+
+console.log("DASHBOARD: No redirect needed, loading dashboard normally");
 
 ---
 

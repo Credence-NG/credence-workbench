@@ -73,13 +73,14 @@ const getOrgDetails = async (): Promise<IOrgDetails> => {
         const { data } = (await getOrganizationById(orgId)) as AxiosResponse;
 
         if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
+          console.log('🔍 getOrgDetails - API Response data:', data?.data);
+          console.log('🔍 getOrgDetails - org_agents:', data?.data?.org_agents);
+          console.log('🔍 getOrgDetails - orgDid:', data?.data?.org_agents?.orgDid);
           const orgData: IOrgDetails = {
             orgName: data?.data?.name,
-            orgDid:
-              data?.data && data?.data?.org_agents?.length > 0
-                ? data?.data?.org_agents[0]?.orgDid
-                : "",
+            orgDid: data?.data?.org_agents?.orgDid || "",
           };
+          console.log('🔍 getOrgDetails - Final orgData object:', orgData);
           await setToLocalStorage(
             storageKeys.ORG_DETAILS,
             JSON.stringify(orgData)

@@ -24,7 +24,7 @@ export default function BreadCrumbs() {
   return (
     <Breadcrumb
       aria-label="Solid background breadcrumb example"
-      className="bg-gray-50 mt-2 dark:bg-gray-900"
+      className="bg-gray-50 mt-2 dark:bg-slate-800"
     >
       <div className="flex flex-wrap">
         <Breadcrumb.Item href="/dashboard">

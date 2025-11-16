@@ -1,0 +1,22 @@
+---
+import LayoutSidebar from '../../../app/LayoutSidebar.astro';
+import EcosystemDashboard from '../../../components/Ecosystem/EcosystemDashboard';
+import { checkUserSession } from '../../../utils/check-session';
+
+const { ecosystemId } = Astro.params;
+const response = await checkUserSession({cookies: Astro.cookies, currentPath: Astro.url.pathname});
+
+if (!response.authorized) {
+	return Astro.redirect(response.redirect);
+}
+
+if (!ecosystemId) {
+	return Astro.redirect('/ecosystems');
+}
+
+// Access control is handled by checkUserSession and organization membership
+---
+
+<LayoutSidebar notFoundPage={!response.permitted}>
+	<EcosystemDashboard client:only="react" ecosystemId={ecosystemId} />
+</LayoutSidebar>

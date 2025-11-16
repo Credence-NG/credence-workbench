@@ -18,10 +18,12 @@ import { pathRoutes } from '../../config/pathRoutes';
 import {
 	removeFromLocalStorage,
 	setToLocalStorage,
+	getFromLocalStorage,
 } from '../../api/Auth';
 import { EmptyListMessage } from '../EmptyListComponent';
 import CustomSpinner from '../CustomSpinner';
 import CreateOrgModal from '../CreateOrgModal';
+import { PlatformRoles } from '../../common/enums';
 
 const initialPageState = {
 	pageNumber: 1,
@@ -46,6 +48,8 @@ const OrganizationsList = () => {
 
 	const [organizationsList, setOrganizationsList] =
 		useState<Array<Organisation> | null>(null);
+	const [isPlatformAdmin, setIsPlatformAdmin] = useState<boolean>(false);
+	const [currentUserOrgId, setCurrentUserOrgId] = useState<string>('');
 
 	const props = { openModal, setOpenModal };
 
@@ -64,7 +68,31 @@ const OrganizationsList = () => {
 		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
 			const totalPages = data?.data?.totalPages;
 			const totalCount = data?.data?.totalCount;
-			const orgList = data?.data?.organizations.map((userOrg: Organisation) => {
+			let organizations = data?.data?.organizations || [];
+
+			// For non-platform admin users, show only their own organization
+			if (!isPlatformAdmin && currentUserOrgId) {
+				organizations = organizations.filter((org: Organisation) => {
+					return org.id === currentUserOrgId;
+				});
+			} else if (!isPlatformAdmin) {
+				// If no current org ID is set, filter out platform admin organizations
+				organizations = organizations.filter((org: Organisation) => {
+					// Check if the organization has any roles that indicate it's a platform admin org
+					const hasPlatformAdminRole = org.userOrgRoles?.some((userOrgRole: any) =>
+						userOrgRole.orgRole?.name === 'platform_admin'
+					);
+
+					// Also check if the organization name suggests it's a platform admin org
+					const isPlatformAdminOrgByName = org.name?.toLowerCase().includes('platform') &&
+						(org.name?.toLowerCase().includes('admin') || org.name?.toLowerCase().includes('credebl'));
+
+					// Exclude organizations with platform admin roles or platform admin naming
+					return !hasPlatformAdminRole && !isPlatformAdminOrgByName;
+				});
+			}
+
+			const orgList = organizations.map((userOrg: Organisation) => {
 				const roles: string[] = userOrg.userOrgRoles.map(
 					(role) => role.orgRole.name,
 				);
@@ -84,6 +112,31 @@ const OrganizationsList = () => {
 		setLoading(false);
 	};
 
+	// Check if user has platform admin role and get current org ID
+	useEffect(() => {
+		const checkPlatformAdminRole = async () => {
+			try {
+				const userRoles = await getFromLocalStorage(storageKeys.USER_ROLES);
+				const orgId = await getFromLocalStorage(storageKeys.ORG_ID);
+
+				if (userRoles) {
+					const roles = userRoles.split(',');
+					const hasPlatformAdminRole = roles.includes(PlatformRoles.platformAdmin);
+					setIsPlatformAdmin(hasPlatformAdminRole);
+				}
+
+				if (orgId) {
+					setCurrentUserOrgId(orgId);
+				}
+			} catch (error) {
+				console.error('Error checking platform admin role:', error);
+				setIsPlatformAdmin(false);
+			}
+		};
+
+		checkPlatformAdminRole();
+	}, []);
+
 	useEffect(() => {
 		let getData: NodeJS.Timeout;
 
@@ -97,7 +150,7 @@ const OrganizationsList = () => {
 		}
 
 		return () => clearTimeout(getData);
-	}, [searchText, openModal, currentPage.pageNumber]);
+	}, [searchText, openModal, currentPage.pageNumber, isPlatformAdmin, currentUserOrgId]);
 
 	useEffect(() => {
 		const queryParameters = new URLSearchParams(window?.location?.search);

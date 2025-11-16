@@ -2,6 +2,11 @@
 
 ## Overview
 
+Add API_ACCESS feature to the admin role in permissions
+Add API-Keys route to pathRoutes
+Add API-Keys menu item to sidebarMenus
+Add an icon for API keys
+
 The Credence Workbench uses a **role-based, feature-driven sidebar system** that dynamically renders menu items based on user permissions. This guide explains how to add new menu items to the sidebar.
 
 ## Architecture

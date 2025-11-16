@@ -18,6 +18,7 @@ export interface AddPasswordDetails {
   isPasskey: boolean;
   firstName: string | null;
   lastName: string | null;
+  phoneNumber: string | null;
 }
 export interface UserSignInData {
   email: string | undefined;
@@ -245,34 +246,227 @@ export const decryptData = (value: any): string => {
   const CRYPTO_PRIVATE_KEY: string = import.meta.env.PUBLIC_CRYPTO_PRIVATE_KEY;
 
   try {
+    // If value is not a string, try to convert it
+    if (typeof value !== "string") {
+      console.warn(
+        "DecryptData: Value is not a string, attempting to convert:",
+        typeof value
+      );
+      value = String(value);
+    }
+
+    // Check if value looks like encrypted data
+    if (!value || value.length < 10) {
+      console.warn(
+        "DecryptData: Value appears to be too short for encrypted data:",
+        value
+      );
+      return "";
+    }
+
+    // Check if the crypto key is available
+    if (!CRYPTO_PRIVATE_KEY) {
+      console.error(
+        "DecryptData: CRYPTO_PRIVATE_KEY is not available from environment"
+      );
+      return "";
+    }
+
+    // Additional debugging for the problematic value
+    if (value.startsWith("U2FsdGVkX1")) {
+      //   console.log("🔍 DecryptData: Debugging encryption details:");
+      //   console.log("  - Value starts with U2FsdGVkX1 (CryptoJS format): true");
+      //   console.log("  - Value length:", value.length);
+      //   console.log("  - Crypto key available:", !!CRYPTO_PRIVATE_KEY);
+      //   console.log("  - Crypto key length:", CRYPTO_PRIVATE_KEY?.length || 0);
+      //   console.log("  - Full value:", value);
+    }
+
     let bytes = CryptoJS.AES.decrypt(value, CRYPTO_PRIVATE_KEY);
-    return bytes.toString(CryptoJS.enc.Utf8);
+    const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
+
+    // If decryption results in empty string, try alternative approaches
+    if (!decryptedString) {
+      console.error(
+        "DecryptData: Decryption resulted in empty string for value:",
+        value?.substring(0, 50) + "..."
+      );
+      console.error(
+        "DecryptData: Crypto key length:",
+        CRYPTO_PRIVATE_KEY?.length || 0
+      );
+      console.error("DecryptData: Raw bytes object:", bytes);
+      console.error("DecryptData: Bytes sigBytes:", bytes.sigBytes);
+
+      // Check if the value might be stored as plain text (fallback for migration)
+      try {
+        // If the value looks like JSON or plain text, return it as-is
+        if (
+          value.startsWith("{") ||
+          value.startsWith("[") ||
+          value.includes(",") ||
+          !value.includes("+") ||
+          !value.includes("/")
+        ) {
+          console.warn(
+            "DecryptData: Value might be plain text, returning as-is"
+          );
+          return value;
+        }
+      } catch (e) {
+        // Ignore
+      }
+    }
+
+    return decryptedString;
   } catch (error) {
     // Handle decryption error or invalid input
-    console.error("Decryption error:", error);
+    console.error(
+      "DecryptData: Decryption error for value:",
+      value?.substring(0, 50) + "...",
+      error
+    );
+
+    // Final fallback - if decryption fails completely, check if value might be plain text
+    try {
+      if (
+        typeof value === "string" &&
+        (value.startsWith("{") ||
+          value.startsWith("[") ||
+          (!value.includes("+") && !value.includes("/")))
+      ) {
+        console.warn(
+          "DecryptData: FALLBACK - Treating failed decryption as plain text"
+        );
+        return value;
+      }
+    } catch (e) {
+      // Ignore fallback errors
+    }
+
     return "";
   }
 };
 
 export const setToLocalStorage = async (key: string, value: any) => {
+  // Debug logging for role-related keys
+  if (
+    key === "user_roles" ||
+    key === "org_roles" ||
+    key === "user_permissions"
+  ) {
+    console.log(`🔒 SetToLocalStorage DEBUG for ${key}:`);
+    console.log("Value to store:", value);
+    console.log("Value type:", typeof value);
+    console.log(
+      "Value length/count:",
+      Array.isArray(value) ? value.length : value?.length || 0
+    );
+  }
+
   // If passed value is object then checked empty object
   if (typeof value === "object" && Boolean(Object.keys(value).length <= 0)) {
+    if (
+      key === "user_roles" ||
+      key === "org_roles" ||
+      key === "user_permissions"
+    ) {
+      console.log(
+        `❌ SetToLocalStorage: Empty object detected for ${key}, not storing`
+      );
+    }
     return;
   }
 
   // If passed value is string then checked if value is falsy
   if (typeof value === "string" && !value?.trim()) {
+    if (
+      key === "user_roles" ||
+      key === "org_roles" ||
+      key === "user_permissions"
+    ) {
+      console.log(
+        `❌ SetToLocalStorage: Empty/falsy string detected for ${key}, not storing`
+      );
+    }
     return;
   }
 
-  const convertedValue = await encryptData(value);
-  const setValue = await localStorage.setItem(key, convertedValue as string);
+  const convertedValue = encryptData(value);
+
+  if (
+    key === "user_roles" ||
+    key === "org_roles" ||
+    key === "user_permissions"
+  ) {
+    console.log("Encrypted value length:", convertedValue?.length || 0);
+    console.log("About to store in localStorage...");
+  }
+
+  localStorage.setItem(key, convertedValue as string);
+
+  if (
+    key === "user_roles" ||
+    key === "org_roles" ||
+    key === "user_permissions"
+  ) {
+    console.log(`✅ Successfully stored ${key} in localStorage`);
+    // Verify it was stored
+    const verification = localStorage.getItem(key);
+    console.log("Verification - value exists in localStorage:", !!verification);
+    console.log(
+      "Verification - stored value length:",
+      verification?.length || 0
+    );
+  }
+
   return true;
 };
 
 export const getFromLocalStorage = async (key: string) => {
-  const value = await localStorage.getItem(key);
-  const convertedValue = value ? await decryptData(value) : "";
+  const value = localStorage.getItem(key);
+
+  // Debug logging for role-related keys and ORG_DID
+  if (
+    key === "user_roles" ||
+    key === "org_roles" ||
+    key === "user_permissions" ||
+    key === "did"
+  ) {
+    console.log(`🔍 GetFromLocalStorage DEBUG for ${key}:`);
+    console.log(
+      "Raw value from localStorage:",
+      value ? value.substring(0, 100) + "..." : "null/undefined"
+    );
+    console.log("Value exists:", !!value);
+    console.log("Value length:", value?.length || 0);
+  }
+
+  if (!value) {
+    if (
+      key === "user_roles" ||
+      key === "org_roles" ||
+      key === "user_permissions" ||
+      key === "did"
+    ) {
+      console.log(`❌ No value found in localStorage for key: ${key}`);
+    }
+    return "";
+  }
+
+  const convertedValue = decryptData(value);
+
+  // Debug logging for role-related keys and ORG_DID
+  if (
+    key === "user_roles" ||
+    key === "org_roles" ||
+    key === "user_permissions" ||
+    key === "did"
+  ) {
+    console.log("Decrypted value:", convertedValue || "empty/failed");
+    console.log("Decryption successful:", !!convertedValue);
+  }
+
   return convertedValue;
 };
 

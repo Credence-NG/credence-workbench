@@ -1,0 +1,16 @@
+---
+import LayoutSidebar from '../../app/LayoutSidebar.astro';
+import ApiKeysComponent from '../../components/organization/ApiKeys'
+import { checkUserSession } from '../../utils/check-session';
+import { pathRoutes } from '../../config/pathRoutes';
+
+const response = await checkUserSession({cookies: Astro.cookies, currentPath: Astro.url.pathname});
+const route: string = pathRoutes.auth.sinIn
+if (!response.authorized) {
+	return Astro.redirect(response.redirect || route);
+}
+---
+
+<LayoutSidebar notFoundPage={!response.permitted}>
+	<ApiKeysComponent client:visible />
+</LayoutSidebar>

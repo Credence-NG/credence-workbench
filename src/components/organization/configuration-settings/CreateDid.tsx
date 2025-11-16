@@ -46,7 +46,7 @@ const CreateDIDModal = (props: EditOrgdetailsModalProps) => {
 		const { data } = response as AxiosResponse;
 		setLoading(false);
 		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
-			const didMethod = data?.data?.org_agents[0]?.orgDid
+			const didMethod = data?.data?.org_agents?.orgDid
 				?.split(':')
 				.slice(0, 2)
 				.join(':');
@@ -55,7 +55,7 @@ const CreateDIDModal = (props: EditOrgdetailsModalProps) => {
 
 			let ledgerName;
 			if (didMethod === DidMethod.INDY || DidMethod.POLYGON) {
-				ledgerName = data?.data?.org_agents[0]?.orgDid.split(':')[1];
+				ledgerName = data?.data?.org_agents?.orgDid.split(':')[1];
 			} else {
 				ledgerName = 'No Ledger';
 
@@ -65,9 +65,9 @@ const CreateDIDModal = (props: EditOrgdetailsModalProps) => {
 			let networkName;
 
 			if (didMethod === DidMethod.INDY) {
-				networkName = data?.data?.org_agents[0]?.orgDid.split(':').slice(2, 4).join(':');
+				networkName = data?.data?.org_agents?.orgDid.split(':').slice(2, 4).join(':');
 			} else if (didMethod === DidMethod.POLYGON) {
-				networkName = data?.data?.org_agents[0]?.orgDid.split(':')[2];
+				networkName = data?.data?.org_agents?.orgDid.split(':')[2];
 			} else {
 				networkName = '';
 			}
@@ -77,7 +77,7 @@ const CreateDIDModal = (props: EditOrgdetailsModalProps) => {
 			let completeDidMethod;
 
 			if (didMethod === DidMethod.INDY) {
-				completeDidMethod = data?.data?.org_agents[0]?.orgDid.split(':').slice(0, 4).join(':');
+				completeDidMethod = data?.data?.org_agents?.orgDid.split(':').slice(0, 4).join(':');
 			} else {
 				completeDidMethod = didMethod;
 			}

@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # Main Application Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=staging
+        - PUBLIC_ENVIRONMENT=staging
+        - PUBLIC_MODE=staging
+    container_name: confirmd-studio-app
+    ports:
+      - "3000:3000"
+      - "8085:8085"
+    environment:
+      - NODE_ENV=staging
+      - PUBLIC_ENVIRONMENT=staging
+      - PUBLIC_MODE=staging
+      - PORT=3000
+    env_file:
+      # Use Docker-specific staging environment file
+      - .env.docker
+    volumes:
+      # Mount logs directory for persistent logging
+      - ./logs:/app/logs
+    networks:
+      - confirmd-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8085/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Cloudflare Tunnel Service
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: confirmd-tunnel
+    command: tunnel --config /etc/cloudflared/config.yml run confirmd-studio
+    volumes:
+      # Mount the Docker-specific tunnel configuration file
+      - ./docker-tunnel-config.yml:/etc/cloudflared/config.yml:ro
+      # Mount the specific tunnel credentials file
+      - ~/.cloudflared/038b9d74-1d85-4cbf-89bd-118383b06364.json:/etc/cloudflared/038b9d74-1d85-4cbf-89bd-118383b06364.json:ro
+    networks:
+      - confirmd-network
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      - TUNNEL_METRICS=0.0.0.0:8081
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Optional: Metrics and monitoring
+  tunnel-metrics:
+    image: prom/prometheus:latest
+    container_name: confirmd-metrics
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - confirmd-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    depends_on:
+      - cloudflare-tunnel
+
+networks:
+  confirmd-network:
+    driver: bridge
+    name: confirmd-network
+
+volumes:
+  prometheus-data:
+    driver: local

@@ -1,0 +1,9 @@
+tunnel: 038b9d74-1d85-4cbf-89bd-118383b06364
+credentials-file: /etc/cloudflared/038b9d74-1d85-4cbf-89bd-118383b06364.json
+
+ingress:
+  # Frontend application - Studio UI
+  - hostname: studio.confamd.com
+    service: http://app:8085
+  # Catch-all rule
+  - service: http_status:404

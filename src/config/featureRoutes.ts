@@ -100,6 +100,45 @@ export const FeatureRoutes: IFeatureRoute[] = [
     baseRoute: "/organizations/credentials",
     routes: ["/organizations/credentials"],
   },
+  {
+    feature: Features.VIEW_PENDING_REQUESTS,
+    baseRoute: "/organizations/pending-requests",
+    routes: ["/organizations/pending-requests"],
+  },
+  {
+    feature: Features.MANAGE_PENDING_REQUESTS,
+    baseRoute: "/organizations/pending-requests",
+    routes: [
+      "/organizations/pending-requests",
+      "/organizations/pending-requests/details",
+    ],
+  },
+  {
+    feature: Features.PENDING_REQUESTS,
+    baseRoute: "/organizations/pending-requests",
+    routes: ["/organizations/pending-requests"],
+  },
+  {
+    feature: Features.APPROVE_PENDING_REQUESTS,
+    baseRoute: "/organizations/pending-requests",
+    routes: [
+      "/organizations/pending-requests",
+      "/organizations/pending-requests/details",
+    ],
+  },
+  {
+    feature: Features.REJECT_PENDING_REQUESTS,
+    baseRoute: "/organizations/pending-requests",
+    routes: [
+      "/organizations/pending-requests",
+      "/organizations/pending-requests/details",
+    ],
+  },
+  {
+    feature: Features.VIEW_PENDING_REQUEST_DETAILS,
+    baseRoute: "/organizations/pending-requests/details",
+    routes: ["/organizations/pending-requests/details"],
+  },
 
   // Verification Features
   {
@@ -172,8 +211,20 @@ export const FeatureRoutes: IFeatureRoute[] = [
   },
   {
     feature: Features.SETTINGS,
-    baseRoute: "/settings",
-    routes: ["/settings"],
+    baseRoute: "/setting",
+    routes: ["/setting", "/settings"],
+  },
+
+  // Organization Registration & Approval (NEW)
+  {
+    feature: Features.REGISTER_ORGANIZATION,
+    baseRoute: "/organizations/register-organization",
+    routes: ["/organizations/register-organization"],
+  },
+  {
+    feature: Features.APPROVE_ORGANIZATION,
+    baseRoute: "/admin/organization-verification",
+    routes: ["/admin/organization-verification"],
   },
 ];
 

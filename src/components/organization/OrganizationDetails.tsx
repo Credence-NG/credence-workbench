@@ -14,10 +14,13 @@ import { Tooltip } from 'flowbite-react';
 import DIDList from './configuration-settings/DidList';
 
 const OrganizationDetails = ({ orgData }: { orgData: Organisation | null }) => {
-
+	console.log('🏗️ OrganizationDetails: Rendering component with orgData (Malik):', orgData);
 	const { org_agents } = orgData as Organisation;
+	console.log('🤖 OrganizationDetails: org_agents (Malik):', org_agents);
+	// org_agents is an object, not an array
 	const agentData: OrgAgent | null =
-		org_agents.length > 0 ? org_agents[0] : null;
+		org_agents && typeof org_agents === 'object' ? org_agents : null;
+	console.log('✅ OrganizationDetails: agentData (Malik):', agentData);
 
 	const [loading, setLoading] = useState<boolean>(true);
 	const [connectionData, setConnectionData] = useState<Connection | null>(null);
@@ -167,9 +170,9 @@ const OrganizationDetails = ({ orgData }: { orgData: Organisation | null }) => {
 		<div>
 
 			<div>
-				<div className="mt-4 flex justify-start items-start flex-wrap p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 sm:p-6 dark:bg-gray-800 gap-6">
+				<div className="mt-4 flex justify-start items-start flex-wrap p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-slate-600 sm:p-6 dark:bg-slate-800 gap-6">
 					<div className='flex justify-between w-full'>
-						<h3 className="mb-1 mt-1 text-xl font-bold text-gray-900 dark:text-white">
+						<h3 className="mb-1 mt-1 text-xl font-bold text-gray-900 dark:text-slate-50">
 							Web Wallet Details
 						</h3>
 					</div>
@@ -178,17 +181,17 @@ const OrganizationDetails = ({ orgData }: { orgData: Organisation | null }) => {
 						style={{ width: 'calc(100% - 23rem)' }}
 					>
 						<div>
-							<ul className="divide-y divide-gray-200 dark:divide-gray-700">
+							<ul className="divide-y divide-gray-200 dark:divide-slate-600">
 								<li className="py-4">
 									<div className="flex items-center space-x-8">
 										<div className="inline-flex min-w-0 items-center">
-											<p className="text-base font-normal text-gray-500 truncate dark:text-gray-400 w-fit sm:w-32 lg:w-40 shrink-0">
+											<p className="text-base font-normal text-gray-500 truncate dark:text-slate-400 w-fit sm:w-32 lg:w-40 shrink-0">
 												Wallet Name
 											</p>
-											<p className="text-base font-normal text-gray-500 truncate dark:text-gray-400">
+											<p className="text-base font-normal text-gray-500 truncate dark:text-slate-400">
 												:
 											</p>
-											<p className="ml-4 text-base font-semibold text-gray-900 truncate dark:text-white w-full">
+											<p className="ml-4 text-base font-semibold text-gray-900 truncate dark:text-slate-100 w-full">
 												{agentData?.walletName}
 											</p>
 										</div>
@@ -197,19 +200,19 @@ const OrganizationDetails = ({ orgData }: { orgData: Organisation | null }) => {
 								<li className="pb-4 pt-2">
 									<div className="flex items-center space-x-4">
 										<div className="flex min-w-0 items-center">
-											<p className="text-base font-normal text-gray-500 dark:text-gray-400 w-fit sm:w-32 lg:w-40 shrink-0">
+											<p className="text-base font-normal text-gray-500 dark:text-slate-400 w-fit sm:w-32 lg:w-40 shrink-0">
 												Org DID
 											</p>
-											<p className="text-base font-normal text-gray-500 truncate dark:text-gray-400">
+											<p className="text-base font-normal text-gray-500 truncate dark:text-slate-400">
 												:
 											</p>
 											{agentData?.orgDid ? (
 												<CopyDid
-													className="ml-4 pt-2 font-courier text-base text-gray-500 dark:text-gray-400 font-semibold text-gray-900 truncate dark:text-white"
+													className="ml-4 pt-2 font-courier text-base text-gray-500 dark:text-slate-400 font-semibold text-gray-900 truncate dark:text-slate-100"
 													value={agentData?.orgDid}
 												/>
 											) : (
-												<span className="ml-4 pt-2 font-courier text-base text-gray-500 dark:text-gray-400 font-semibold text-gray-900 truncate dark:text-white">
+												<span className="ml-4 pt-2 font-courier text-base text-gray-500 dark:text-slate-400 font-semibold text-gray-900 truncate dark:text-slate-100">
 													Not available
 												</span>
 											)}
@@ -220,13 +223,13 @@ const OrganizationDetails = ({ orgData }: { orgData: Organisation | null }) => {
 								<li className="py-4">
 									<div className="flex items-center space-x-4">
 										<div className="inline-flex min-w-0 items-center">
-											<p className="text-base font-normal text-gray-500 truncate dark:text-gray-400 w-fit sm:w-32 lg:w-40 shrink-0">
+											<p className="text-base font-normal text-gray-500 truncate dark:text-slate-400 w-fit sm:w-32 lg:w-40 shrink-0">
 												Network
 											</p>
-											<p className="pr-4 text-base font-normal text-gray-500 dark:text-gray-400">
+											<p className="pr-4 text-base font-normal text-gray-500 dark:text-slate-400">
 												:
 											</p>
-											<p className="text-base font-semibold text-gray-900 truncate dark:text-white w-full">
+											<p className="text-base font-semibold text-gray-900 truncate dark:text-slate-100 w-full">
 												{agentData?.ledgers ? agentData?.ledgers?.name : `-`}
 											</p>
 										</div>
@@ -236,13 +239,13 @@ const OrganizationDetails = ({ orgData }: { orgData: Organisation | null }) => {
 								<li className="py-4">
 									<div className="flex items-center space-x-4">
 										<div className="inline-flex min-w-0 items-center">
-											<p className="text-base font-normal text-gray-500 truncate dark:text-gray-400 w-fit sm:w-32 lg:w-40 shrink-0">
+											<p className="text-base font-normal text-gray-500 truncate dark:text-slate-400 w-fit sm:w-32 lg:w-40 shrink-0">
 												Agent Type
 											</p>
-											<p className="pr-4 text-base font-normal text-gray-500 dark:text-gray-400">
+											<p className="pr-4 text-base font-normal text-gray-500 dark:text-slate-400">
 												:
 											</p>
-											<p className="text-base font-semibold text-gray-900 truncate dark:text-white w-full">
+											<p className="text-base font-semibold text-gray-900 truncate dark:text-slate-100 w-full">
 												{agentData?.org_agent_type?.agent
 													? agentData?.org_agent_type?.agent
 														?.charAt(0)
@@ -258,13 +261,13 @@ const OrganizationDetails = ({ orgData }: { orgData: Organisation | null }) => {
 								<li className="py-4">
 									<div className="flex items-center space-x-4">
 										<div className="inline-flex min-w-0 items-center">
-											<p className="text-base font-normal text-gray-500 truncate dark:text-gray-400 w-fit sm:w-32 lg:w-40 shrink-0">
+											<p className="text-base font-normal text-gray-500 truncate dark:text-slate-400 w-fit sm:w-32 lg:w-40 shrink-0">
 												Created On
 											</p>
-											<p className="pr-4 text-base font-normal text-gray-500 dark:text-gray-400">
+											<p className="pr-4 text-base font-normal text-gray-500 dark:text-slate-400">
 												:
 											</p>
-											<div className="text-base font-semibold text-gray-900 truncate dark:text-white w-full">
+											<div className="text-base font-semibold text-gray-900 truncate dark:text-slate-100 w-full">
 												{agentData?.createDateTime ? (
 													<DateTooltip date={agentData?.createDateTime}>
 														{' '}
@@ -335,31 +338,31 @@ const OrganizationDetails = ({ orgData }: { orgData: Organisation | null }) => {
 					</div>
 				</div>
 				{agentData?.orgDid?.startsWith('did:web') && (
-					<div className="mt-4 flex justify-start items-center flex-wrap p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 sm:p-6 dark:bg-gray-800">
+					<div className="mt-4 flex justify-start items-center flex-wrap p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-slate-600 sm:p-6 dark:bg-slate-800">
 						<div className="flex justify-between w-full">
 							<div className="relative flex w-full">
 								<div
 									className="mb-4 sm:mb-0 px-0 sm:px-4 py-4 w-full"
 								>
-									<h3 className="mb-1 mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+									<h3 className="mb-1 mt-1 text-2xl font-bold text-gray-900 dark:text-slate-100">
 										DID Document
 									</h3>
 
 									<div className="mt-4">
-										<h3 className="mb-1 mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+										<h3 className="mb-1 mt-1 text-lg font-semibold text-gray-900 dark:text-slate-100">
 											Instructions:
 										</h3>
-										<p className="dark:text-white">
+										<p className="dark:text-slate-100">
 											1. Kindly provide the DID document for hosting purposes in
 											order to facilitate its publication
 										</p>
-										<p className="dark:text-white">
+										<p className="dark:text-slate-100">
 											2. Failure to host the DID document will result in the
 											inability to publish your DID
 										</p>
 									</div>
 
-									<div className="flex justify-between mt-6 bg-gray-200 dark:bg-gray-300">
+									<div className="flex justify-between mt-6 bg-gray-200 dark:bg-slate-700">
 										<div className="flex p-4">
 											<pre>
 												<code>
@@ -371,7 +374,7 @@ const OrganizationDetails = ({ orgData }: { orgData: Organisation | null }) => {
 											<Tooltip
 												content={'Copy DID Document'}
 												placement="bottom"
-												className="items-center text-center dark:text-white"
+												className="items-center text-center dark:text-slate-100"
 											>
 												<CopyDid
 													className="block text-sm truncate"

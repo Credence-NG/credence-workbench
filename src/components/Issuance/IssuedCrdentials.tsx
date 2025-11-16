@@ -22,6 +22,7 @@ import SortDataTable from '../../commonComponents/datatable/SortDataTable';
 import RoleViewButton from '../RoleViewButton';
 import { Features } from '../../utils/enums/features';
 import { getOrganizationById } from '../../api/organization';
+import { ResendButton } from './ResendButton';
 
 const initialPageState = {
 	itemPerPage: 10,
@@ -35,6 +36,7 @@ const initialPageState = {
 const CredentialList = () => {
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
+	const [successMsg, setSuccessMsg] = useState<string | null>(null);
 	const [issuedCredList, setIssuedCredList] = useState<ITableData[]>([]);
 	const [walletCreated, setWalletCreated] = useState(false);
 	const [listAPIParameter, setListAPIParameter] =
@@ -45,8 +47,17 @@ const CredentialList = () => {
 		nextPage: '',
 		lastPage: '',
 	});
-	const [w3cSchema, setW3CSchema]= useState<boolean>(false);
-    const [searchText, setSearchText] = useState("");
+	const [w3cSchema, setW3CSchema] = useState<boolean>(false);
+	const [searchText, setSearchText] = useState("");
+
+	const handleResendSuccess = () => {
+		setSuccessMsg('Credential resent successfully');
+		// Refresh the list to update statuses
+		getIssuedCredDefs(listAPIParameter);
+
+		// Clear success message after 3 seconds
+		setTimeout(() => setSuccessMsg(null), 3000);
+	};
 
 	const getIssuedCredDefs = async (
 		listAPIParameter: IConnectionListAPIParameter,
@@ -54,7 +65,10 @@ const CredentialList = () => {
 		setLoading(true);
 		try {
 			const orgData = await getOrgDetails();
+			console.log('🔍 IssuedCrdentials - orgData from getOrgDetails():', orgData);
+			console.log('🔍 IssuedCrdentials - orgData.orgDid:', orgData.orgDid);
 			const isWalletCreated = Boolean(orgData.orgDid);
+			console.log('🔍 IssuedCrdentials - isWalletCreated:', isWalletCreated);
 			setWalletCreated(isWalletCreated);
 			const orgId = await getFromLocalStorage(storageKeys.ORG_ID);
 
@@ -73,7 +87,7 @@ const CredentialList = () => {
 					});
 					const credentialList = data?.data?.data?.map(
 						(issuedCredential: IssuedCredential) => {
-								
+
 							const schemaName = issuedCredential?.schemaName ?? 'Not available';
 							return {
 								data: [
@@ -94,59 +108,51 @@ const CredentialList = () => {
 									{
 										data: (
 											<span
-												className={` ${
-													issuedCredential.state ===
-														IssueCredential.offerSent &&
+												className={` ${issuedCredential.state ===
+													IssueCredential.offerSent &&
 													'bg-orange-100 text-orange-800 border border-orange-100 dark:bg-gray-700 dark:border-orange-300 dark:text-orange-300'
-												} ${
-													issuedCredential?.state === IssueCredential.done &&
+													} ${issuedCredential?.state === IssueCredential.done &&
 													'bg-green-100 text-green-800 dark:bg-gray-700 dark:text-green-400 border border-green-100 dark:border-green-500'
-												} ${
-													issuedCredential?.state ===
-														IssueCredential.abandoned &&
+													} ${issuedCredential?.state ===
+													IssueCredential.abandoned &&
 													'bg-red-100 text-red-800 border border-red-100 dark:border-red-400 dark:bg-gray-700 dark:text-red-400'
-												} ${
-													issuedCredential?.state ===
-														IssueCredential.requestReceived &&
+													} ${issuedCredential?.state ===
+													IssueCredential.requestReceived &&
 													'bg-primary-100 text-primary-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-primary-900 dark:text-primary-300'
-												} ${
-													issuedCredential?.state ===
-														IssueCredential.proposalReceived &&
+													} ${issuedCredential?.state ===
+													IssueCredential.proposalReceived &&
 													'bg-secondary-700 text-primary-600 border border-secondary-100 dark:border-secondary-700 dark:bg-gray-700 dark:text-secondary-800'
-												} ${
-													issuedCredential?.state ===
-														IssueCredential.credentialIssued &&
+													} ${issuedCredential?.state ===
+													IssueCredential.credentialIssued &&
 													'bg-sky-300 text-primary-700 border border-sky-100 dark:border-sky-700 dark:bg-gray-700 dark:text-sky-500'
-												} text-xs font-medium mr-0.5 px-0.5 py-0.5 rounded-md border flex justify-center rounded-md items-center w-fit px-2`}
+													} text-xs font-medium mr-0.5 px-0.5 py-0.5 rounded-md border flex justify-center rounded-md items-center w-fit px-2`}
 											>
 												{issuedCredential.state === IssueCredential.offerSent
 													? IssueCredentialUserText.offerSent
 													: issuedCredential.state === IssueCredential.done
-													? IssueCredentialUserText.done
-													: issuedCredential.state === IssueCredential.abandoned
-													? IssueCredentialUserText.abandoned
-													: issuedCredential.state ===
-													  IssueCredential.requestReceived
-													? IssueCredentialUserText.received
-													: issuedCredential.state ===
-													  IssueCredential.proposalReceived
-													? IssueCredentialUserText.proposalReceived
-													: IssueCredentialUserText.credIssued}
+														? IssueCredentialUserText.done
+														: issuedCredential.state === IssueCredential.abandoned
+															? IssueCredentialUserText.abandoned
+															: issuedCredential.state ===
+																IssueCredential.requestReceived
+																? IssueCredentialUserText.received
+																: issuedCredential.state ===
+																	IssueCredential.proposalReceived
+																	? IssueCredentialUserText.proposalReceived
+																	: IssueCredentialUserText.credIssued}
 											</span>
 										),
 									},
-									// {
-									// 	data: issuedCredential?.isRevocable ? (
-									// 		<Button
-									// 			disabled
-									// 			className='text-base font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 sm:w-auto dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"'
-									// 		>
-									// 			Revoke
-									// 		</Button>
-									// 	) : (
-									// 		<span className="text-gray-400">Non revocable</span>
-									// 	),
-									// },
+									{
+										data: (
+											<ResendButton
+												credentialRequestId={issuedCredential.id || issuedCredential.connectionId}
+												currentStatus={issuedCredential.state}
+												connectionId={issuedCredential.connectionId}
+												onResendSuccess={handleResendSuccess}
+											/>
+										),
+									},
 								],
 							};
 						},
@@ -170,7 +176,7 @@ const CredentialList = () => {
 		const response = await getOrganizationById(orgId);
 		const { data } = response as AxiosResponse;
 		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
-			const did = data?.data?.org_agents[0]?.orgDid;
+			const did = data?.data?.org_agents?.orgDid;
 			if (did) {
 				await setToLocalStorage(storageKeys.ORG_DID, did)
 				if (did.includes(DidMethod.POLYGON) || did.includes(DidMethod.KEY) || did.includes(DidMethod.WEB)) {
@@ -221,10 +227,10 @@ const CredentialList = () => {
 	};
 
 	const schemeSelection = async () => {
-		if(w3cSchema){
+		if (w3cSchema) {
 			window.location.href = pathRoutes.organizations.Issuance.schema;
 		}
-		else if(!w3cSchema){
+		else if (!w3cSchema) {
 			window.location.href = pathRoutes.organizations.Issuance.issue;
 		}
 	};
@@ -238,7 +244,7 @@ const CredentialList = () => {
 		{ columnName: 'Schema Name' },
 		{ columnName: 'Date' },
 		{ columnName: 'Status' },
-		// { columnName: 'Action' },
+		{ columnName: 'Action' },
 	];
 
 	return (
@@ -285,6 +291,15 @@ const CredentialList = () => {
 							setError(null);
 						}}
 					/>
+					{successMsg && (
+						<AlertComponent
+							message={successMsg}
+							type={'success'}
+							onAlertClose={() => {
+								setSuccessMsg(null);
+							}}
+						/>
+					)}
 					{!walletCreated && !loading ? (
 						<div className="flex justify-center items-center">
 							<EmptyListMessage

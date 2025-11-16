@@ -15,13 +15,15 @@ import FooterBar from './FooterBar.js';
 interface nameValues {
 	firstName: string;
 	lastName: string;
+	phoneNumber: string;
 }
 
 const SignUpUserName = () => {
 
 	const [userDetails, setUserDetails] = useState<nameValues>({
 		firstName: '',
-		lastName: ''
+		lastName: '',
+		phoneNumber: ''
 	})
 	const [continuePasskeyFlag, setContinuePasskeyFlag] = useState<boolean>(false)
 	const [showSignUpUser, setShowSignUpUser] = useState<boolean>(false)
@@ -31,7 +33,8 @@ const SignUpUserName = () => {
 	const setNameValue = (values: nameValues) => {
 		setUserDetails({
 			firstName: values.firstName,
-			lastName: values.lastName
+			lastName: values.lastName,
+			phoneNumber: values.phoneNumber
 		})
 
 		setContinuePasskeyFlag(true)
@@ -54,13 +57,15 @@ const SignUpUserName = () => {
 				<SignUpUserPasskey
 					firstName={userDetails.firstName}
 					lastName={userDetails.lastName}
+					phoneNumber={userDetails.phoneNumber}
 				/>
 			) : showSignUpUser ? (
 				<SignUpUser />
 			) : continuePasskeyFlag ? (
 				<SignUpUserPasskey
 					firstName={userDetails.firstName}
-					lastName={userDetails.lastName} />
+					lastName={userDetails.lastName}
+					phoneNumber={userDetails.phoneNumber} />
 			) : (
 
 				<div className="flex flex-col min-h-screen">
@@ -71,10 +76,10 @@ const SignUpUserName = () => {
 					<div className="flex flex-1 flex-col md:flex-row">
 						<div className="hidden md:block md:w-3/5 w-full bg-blue-500 bg-opacity-10 lg:p-4 md:p-4">
 							<div className='flex justify-center'>
-								<img
+								{/* <img
 									className='max-h-100/10rem'
 									src="/images/signin.svg"
-									alt="img" />
+									alt="img" /> */}
 
 							</div>
 						</div>
@@ -105,9 +110,9 @@ const SignUpUserName = () => {
 
 								<div className="md:hidden block bg-blue-500 bg-opacity-10 mt-4" >
 
-									<img
+									{/* <img
 										src="/images/signin.svg"
-										alt="img" />
+										alt="img" /> */}
 								</div>
 
 
@@ -115,6 +120,7 @@ const SignUpUserName = () => {
 									initialValues={{
 										firstName: '',
 										lastName: '',
+										phoneNumber: '',
 									}}
 									validationSchema={yup.object().shape({
 										firstName: yup
@@ -128,6 +134,13 @@ const SignUpUserName = () => {
 											.required('Last name is required')
 											.min(2, 'Last name must be at least 2 characters')
 											.max(50, 'Last name must be at most 50 characters')
+											.trim(),
+										phoneNumber: yup
+											.string()
+											.required('Phone number is required')
+											.matches(/^[+]?[\d\s\-()]+$/, 'Please enter a valid phone number')
+											.min(10, 'Phone number must be at least 10 digits')
+											.max(20, 'Phone number must be at most 20 characters')
 											.trim()
 									})}
 									validateOnBlur
@@ -143,7 +156,8 @@ const SignUpUserName = () => {
 										if (JSON.stringify(userDetails) !== JSON.stringify(formikHandlers.values))
 											setUserDetails({
 												firstName: formikHandlers.values.firstName,
-												lastName: formikHandlers.values.lastName
+												lastName: formikHandlers.values.lastName,
+												phoneNumber: formikHandlers.values.phoneNumber
 											})
 										return (
 											<Form
@@ -231,6 +245,50 @@ const SignUpUserName = () => {
 																</span>
 															)}
 													</div>
+
+													{/* Phone Number Field */}
+													<div className="text-primary-700 font-inter text-base font-medium leading-5 mt-6">
+														<div className="block mb-2 text-sm font-medium  dark:text-white">
+															<Label
+																className="text-primary-700 dark:text-gray-200"
+																htmlFor="phoneNumber"
+																value="Phone Number "
+															/>
+															<span className="text-red-500 text-xs">*</span>
+														</div>
+														<Field
+															id="signupphone"
+															name="phoneNumber"
+															placeholder="Please enter your phone number"
+															className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+															onChange={(e) => {
+																const value = e.target.value;
+																formikHandlers.setFieldValue(
+																	'phoneNumber',
+																	value,
+																);
+																formikHandlers.setFieldTouched(
+																	'phoneNumber',
+																	true,
+																	false
+																);
+
+																if (value.length > 20) {
+																	formikHandlers.setFieldError(
+																		'phoneNumber',
+																		'Phone number must be at most 20 characters',
+																	);
+																}
+															}}
+														/>
+
+														{formikHandlers?.errors?.phoneNumber &&
+															formikHandlers?.touched?.phoneNumber && (
+																<span className="text-red-500 text-xs">
+																	{formikHandlers?.errors?.phoneNumber}
+																</span>
+															)}
+													</div>
 													<div className='flex justify-between items-center flex-wrap mt-8'>
 														<a
 															id='navigatetosignup'
@@ -244,7 +302,7 @@ const SignUpUserName = () => {
 															type="submit"
 															isProcessing={''}
 															className='w-fit px-0 sm:px-4 xl:px-12 font-medium text-center text-white bg-primary-700 hover:!bg-primary-800 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
-															>
+														>
 															<svg
 																xmlns="http://www.w3.org/2000/svg"
 																width="16"

@@ -45,26 +45,26 @@ const WalletSpinup = (props: {
 	const [agentSpinupCall, setAgentSpinupCall] = useState<boolean>(false);
 	const [failure, setFailure] = useState<string | null>(null);
 	const [seeds, setSeeds] = useState<string>('');
-    const [maskedSeeds, setMaskedSeeds] = useState('');
+	const [maskedSeeds, setMaskedSeeds] = useState('');
 	const [orgData, setOrgData] = useState<Organisation | null>(null);
 	const [isShared, setIsShared] = useState<boolean>(false);
 	const [isConfiguredDedicated, setIsConfiguredDedicated] = useState<boolean>(false);
 
-	  
+
 	const maskSeeds = (seed: string) => {
 		const visiblePart = seed.slice(0, -10);
 		const maskedPart = seed.slice(-10).replace(/./g, '*');
 		return visiblePart + maskedPart;
 	};
-	
-    useEffect(() => {
-        const generatedSeeds = nanoid(32);
-        const masked = maskSeeds(generatedSeeds);
-        setSeeds(generatedSeeds);
-        setMaskedSeeds(masked);
-    }, []);
-	
-	const configureDedicatedWallet = ()=> {
+
+	useEffect(() => {
+		const generatedSeeds = nanoid(32);
+		const masked = maskSeeds(generatedSeeds);
+		setSeeds(generatedSeeds);
+		setMaskedSeeds(masked);
+	}, []);
+
+	const configureDedicatedWallet = () => {
 		setIsConfiguredDedicated(true);
 	}
 	const fetchOrganizationDetails = async () => {
@@ -78,40 +78,40 @@ const WalletSpinup = (props: {
 
 			const agentData = data?.data?.org_agents
 
-			if (data?.data?.org_agents && data?.data?.org_agents[0]?.org_agent_type?.agent?.toLowerCase()  === AgentType.DEDICATED){
+			if (data?.data?.org_agents && data?.data?.org_agents?.org_agent_type?.agent?.toLowerCase() === AgentType.DEDICATED) {
 				setIsConfiguredDedicated(true)
 				setAgentType(AgentType.DEDICATED)
 			}
-			
-			if (agentData.length > 0 && agentData?.orgDid) {
+
+			if (agentData && typeof agentData === 'object' && agentData?.orgDid) {
 				setOrgData(data?.data);
 			}
-	};
-}
+		};
+	}
 
 	useEffect(() => {
-       fetchOrganizationDetails()
-    }, []);
+		fetchOrganizationDetails()
+	}, []);
 
 	const onRadioSelect = (type: string) => {
 		setAgentType(type);
 	};
 
-const submitDedicatedWallet = async (
-	values: IValuesShared,
-	privatekey: string,
-	domain: string
-) => {	
+	const submitDedicatedWallet = async (
+		values: IValuesShared,
+		privatekey: string,
+		domain: string
+	) => {
 		const didData = {
-			seed:values.method === DidMethod.POLYGON ? '' : seeds,
+			seed: values.method === DidMethod.POLYGON ? '' : seeds,
 			keyType: values.keyType || 'ed25519',
-		    method: values.method.split(':')[1] || '',
+			method: values.method.split(':')[1] || '',
 			network:
-			values.method === DidMethod.INDY ?
-            values.network?.split(':').slice(2).join(':') :
-				values.method === DidMethod.POLYGON
-					? values.network?.split(':').slice(1).join(':') 
-					: '',
+				values.method === DidMethod.INDY ?
+					values.network?.split(':').slice(2).join(':') :
+					values.method === DidMethod.POLYGON
+						? values.network?.split(':').slice(1).join(':')
+						: '',
 			domain: values.method === DidMethod.WEB ? domain : '',
 			role: values.method === DidMethod.INDY ? 'endorser' : '',
 			privatekey: values.method === DidMethod.POLYGON ? privatekey : '',
@@ -121,15 +121,15 @@ const submitDedicatedWallet = async (
 		};
 		setLoading(true);
 		const orgId = await getFromLocalStorage(storageKeys.ORG_ID);
-		
+
 		const spinupRes = await createDid(didData);
 		const { data } = spinupRes as AxiosResponse;
 		if (data?.statusCode === apiStatusCodes.API_STATUS_CREATED) {
-			
-				if (data?.data?.did) {
-	            setAgentSpinupCall(true);
+
+			if (data?.data?.did) {
+				setAgentSpinupCall(true);
 				window.location.reload();
-      			
+
 			} else {
 				setFailure(spinupRes as string);
 			}
@@ -230,14 +230,14 @@ const submitDedicatedWallet = async (
 
 	const generateAlphaNumeric = props?.orgName
 		? props?.orgName
-				?.split(' ')
-				.reduce(
-					(s, c) =>
-						s.charAt(0).toUpperCase() +
-						s.slice(1) +
-						(c.charAt(0).toUpperCase() + c.slice(1)),
-					'',
-				)
+			?.split(' ')
+			.reduce(
+				(s, c) =>
+					s.charAt(0).toUpperCase() +
+					s.slice(1) +
+					(c.charAt(0).toUpperCase() + c.slice(1)),
+				'',
+			)
 		: '';
 
 	const orgName = generateAlphaNumeric.slice(0, 19);
@@ -248,7 +248,7 @@ const submitDedicatedWallet = async (
 		if (agentType === AgentType.SHARED) {
 			formComponent = (
 				<SharedAgentForm
-				    maskedSeeds={maskedSeeds}
+					maskedSeeds={maskedSeeds}
 					seeds={seeds}
 					orgName={orgName}
 					loading={loading}
@@ -256,7 +256,7 @@ const submitDedicatedWallet = async (
 					isCopied={false}
 				/>
 			);
-	    	} else {
+		} else {
 			formComponent = (
 				<DedicatedAgentForm
 					seeds={seeds}
@@ -266,21 +266,21 @@ const submitDedicatedWallet = async (
 				/>
 			);
 		}
-	} 
-	
+	}
+
 	else {
 
-		        if (agentType === AgentType.SHARED) {
-		            formComponent = (
-		                <WalletSteps steps={walletSpinStep} />
-		            );
-		        }
-		        else {
-		            formComponent = (
-		                <OrganizationDetails orgData={orgData} />
-		            );
-		        }
-		    }
+		if (agentType === AgentType.SHARED) {
+			formComponent = (
+				<WalletSteps steps={walletSpinStep} />
+			);
+		}
+		else {
+			formComponent = (
+				<OrganizationDetails orgData={orgData} />
+			);
+		}
+	}
 
 	return (
 		<div className="mt-4 flex-col p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:flex dark:border-gray-700 sm:p-6 dark:bg-gray-800">
@@ -306,48 +306,48 @@ const submitDedicatedWallet = async (
 			<div className="grid w-full mb-4">
 				<div className="col-span-1">
 					<div className='bg-[#F4F4F4] dark:bg-gray-700 max-w-lg'>
-					{!agentSpinupCall && !loading && (
-						<div className="mt-4 flex flex-col gap-4 max-w-lg ml-4 mr-4 -mb-4">
-							<ul className="items-center w-full mx-2 my-4 text-sm ml-0 font-medium text-gray-900 bg-white border border-gray-200 rounded-lg sm:flex dark:bg-gray-700 dark:border-gray-500 dark:text-white">
-								<li className="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-500">
-									<div className="flex items-center pl-3">
-										<label className="w-full py-3 text-sm font-medium text-gray-900 dark:text-gray-300 flex items-center">
-											<input
-											disabled={isConfiguredDedicated && agentType === AgentType.DEDICATED}
-												id="horizontal-list-radio-license"
-												type="radio"
-												checked={agentType === AgentType.SHARED}
-												value=""
-												onChange={() => onRadioSelect(AgentType.SHARED)}
-												name="list-radio"
-												className="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500 mr-2"
-											/>
-											Shared
-										</label>
-									</div>
-								</li>
-								<li className="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-500">
-									<div className="flex items-center pl-3">
-										<label className="w-full py-3 text-sm font-medium text-gray-400 dark:text-gray-300 flex items-center">
-											<input
-												id="horizontal-list-radio-id"
-												type="radio"
-												value=""
-												onChange={() => onRadioSelect(AgentType.DEDICATED)}
-												checked={agentType === AgentType.DEDICATED}
-												name="list-radio"
-											
-												className="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500 disabled:cursor-not-allowed mr-2"
-											/>
-											Dedicated
-										</label>
-									</div>
-								</li>
-							</ul>
-						</div>
-					)}
+						{!agentSpinupCall && !loading && (
+							<div className="mt-4 flex flex-col gap-4 max-w-lg ml-4 mr-4 -mb-4">
+								<ul className="items-center w-full mx-2 my-4 text-sm ml-0 font-medium text-gray-900 bg-white border border-gray-200 rounded-lg sm:flex dark:bg-gray-700 dark:border-gray-500 dark:text-white">
+									<li className="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-500">
+										<div className="flex items-center pl-3">
+											<label className="w-full py-3 text-sm font-medium text-gray-900 dark:text-gray-300 flex items-center">
+												<input
+													disabled={isConfiguredDedicated && agentType === AgentType.DEDICATED}
+													id="horizontal-list-radio-license"
+													type="radio"
+													checked={agentType === AgentType.SHARED}
+													value=""
+													onChange={() => onRadioSelect(AgentType.SHARED)}
+													name="list-radio"
+													className="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500 mr-2"
+												/>
+												Shared
+											</label>
+										</div>
+									</li>
+									<li className="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-500">
+										<div className="flex items-center pl-3">
+											<label className="w-full py-3 text-sm font-medium text-gray-400 dark:text-gray-300 flex items-center">
+												<input
+													id="horizontal-list-radio-id"
+													type="radio"
+													value=""
+													onChange={() => onRadioSelect(AgentType.DEDICATED)}
+													checked={agentType === AgentType.DEDICATED}
+													name="list-radio"
+
+													className="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500 disabled:cursor-not-allowed mr-2"
+												/>
+												Dedicated
+											</label>
+										</div>
+									</li>
+								</ul>
+							</div>
+						)}
 					</div>
-					
+
 
 					{formComponent}
 				</div>
@@ -355,6 +355,6 @@ const submitDedicatedWallet = async (
 		</div>
 	);
 }
-	
+
 
 export default WalletSpinup;

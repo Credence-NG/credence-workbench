@@ -1,0 +1,59 @@
+---
+import LayoutSidebar from "../../../../app/LayoutSidebar.astro";
+import { PendingRequestDetails } from "../../../../components/CredentialRequests";
+import { checkUserSession } from "../../../../utils/check-session";
+
+export const prerender = false;
+
+const response = await checkUserSession({
+	cookies: Astro.cookies,
+	currentPath: Astro.url.pathname,
+});
+
+if (!response.authorized) {
+	return Astro.redirect(response.redirect);
+}
+
+const { requestId } = Astro.params;
+
+// Server-side logging - fetch API response directly on server
+if (requestId) {
+	try {
+		const baseUrl = import.meta.env.PUBLIC_BASE_URL || 'https://platform.confamd.com';
+		const token = Astro.cookies.get('token')?.value;
+		const orgId = Astro.cookies.get('orgId')?.value;
+		
+		if (token && orgId) {
+			const apiUrl = `${baseUrl}/orgs/${orgId}/credential-request-details/${requestId}`;
+			
+			console.log('\n=== SERVER-SIDE API CALL ===');
+			console.log('URL:', apiUrl);
+			console.log('Request ID:', requestId);
+			console.log('Org ID:', orgId);
+			
+			const apiResponse = await fetch(apiUrl, {
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			});
+			
+			const apiData = await apiResponse.json();
+			
+			console.log('=== API RESPONSE DATA ===');
+			console.log('Status:', apiResponse.status);
+			console.log('Response Body:', JSON.stringify(apiData, null, 2));
+			console.log('Requested Attributes:', JSON.stringify(apiData?.data?.requestedAttributes, null, 2));
+			console.log('=== END API RESPONSE ===\n');
+		} else {
+			console.log('Missing token or orgId for server-side API call');
+		}
+	} catch (error) {
+		console.log('Server-side API call error:', error);
+	}
+}
+---
+
+<LayoutSidebar notFoundPage={!response.permitted}>
+	<PendingRequestDetails requestId={requestId || ''} client:load />
+</LayoutSidebar>

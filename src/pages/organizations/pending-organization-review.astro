@@ -1,0 +1,40 @@
+---
+import LayoutCommon from '../../app/LayoutCommon.astro';
+---
+
+<LayoutCommon 
+  title="Organization Review Status"
+  description="Check your organization registration status and review submission details"
+>
+  <main>
+    <div id="pending-organization-review-root"></div>
+  </main>
+</LayoutCommon>
+
+<script>
+  import React from 'react';
+  import { createRoot } from 'react-dom/client';
+  import PendingOrganizationReview from '../../components/organization/PendingOrganizationReview';
+  
+  const container = document.getElementById('pending-organization-review-root');
+  if (container) {
+    const root = createRoot(container);
+    
+    const handleEdit = () => {
+      // Redirect to organization registration page for editing
+      window.location.href = '/organizations/register-organization';
+    };
+    
+    const handleGoToDashboard = () => {
+      // Redirect to organization dashboard
+      window.location.href = '/organizations/dashboard';
+    };
+    
+    root.render(
+      React.createElement(PendingOrganizationReview, {
+        onEdit: handleEdit,
+        onGoToDashboard: handleGoToDashboard
+      })
+    );
+  }
+</script>

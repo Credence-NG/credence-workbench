@@ -1,0 +1,20 @@
+# Prometheus configuration for monitoring Cloudflare Tunnel
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Cloudflare Tunnel metrics
+  - job_name: 'cloudflare-tunnel'
+    static_configs:
+      - targets: ['cloudflare-tunnel:8080']
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+
+  # Application health metrics (if your app provides them)
+  - job_name: 'confirmd-studio'
+    static_configs:
+      - targets: ['app:3000']
+    scrape_interval: 60s
+    metrics_path: '/api/metrics'
+    # Only scrape if your app provides metrics endpoint

@@ -89,10 +89,10 @@ const SignInUser = () => {
 	const saveEmail = async (values: emailValue) => {
 		setEmail(values);
 
-		for await (const value of Object.values(storageKeys)){
+		for await (const value of Object.values(storageKeys)) {
 			await removeFromLocalStorage(value)
 		}
-		
+
 		setCurrentComponent('password');
 		await setToLocalStorage(storageKeys.LOGIN_USER_EMAIL, values.email);
 		setIsPasskeySuccess(true);
@@ -123,11 +123,11 @@ const SignInUser = () => {
 							<div className="flex flex-1 flex-col md:flex-row">
 								<div className="hidden md:block md:w-3/5 w-full bg-blue-500 bg-opacity-10 lg:p-4 md:p-4">
 									<div className="flex justify-center">
-										<img
+										{/* <img
 											className="max-h-100/10rem"
 											src="/images/signin.svg"
 											alt="img"
-										/>
+										/> */}
 									</div>
 								</div>
 
@@ -165,11 +165,11 @@ const SignInUser = () => {
 											</button>
 
 											<div className="w-full flex flex-col items-center justify-center ">
-												<h2 className="text-primary-700 dark:text-gray-200 font-inter text-3xl font-bold leading-10">
+												<h2 className="text-gray-900 dark:text-gray-200 font-inter text-3xl font-bold leading-10">
 													Login
 												</h2>
 
-												<p className="text-gray-500 font-inter text-base font-medium leading-5 mt-2">
+												<p className="text-gray-600 dark:text-gray-400 font-inter text-base font-medium leading-5 mt-2">
 													Enter your email to login
 												</p>
 											</div>
@@ -206,9 +206,9 @@ const SignInUser = () => {
 												>
 													<input type="hidden" name="_csrf" value={new Date().getTime()} />
 													<div className="text-primary-700 font-inter text-base font-medium leading-5 mb-16">
-														<div className="block mb-2 text-sm font-medium dark:text-white">
+														<div className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
 															<Label
-																className="text-primary-700 dark:text-gray-200"
+																className="text-gray-900 dark:text-gray-200"
 																htmlFor="email2"
 																value="Your Email "
 															/>

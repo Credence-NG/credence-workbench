@@ -1,0 +1,18 @@
+---
+import LayoutSidebar from '../../app/LayoutSidebar.astro';
+import EcosystemList from '../../components/Ecosystem/EcosystemList';
+import { checkUserSession } from '../../utils/check-session';
+
+const response = await checkUserSession({cookies: Astro.cookies, currentPath: Astro.url.pathname});
+
+if (!response.authorized) {
+	return Astro.redirect(response.redirect);
+}
+
+// Access control is handled by the sidebar visibility
+// Users can only reach this page if they have VIEW_ECOSYSTEMS or ECOSYSTEM_MANAGEMENT feature
+---
+
+<LayoutSidebar notFoundPage={!response.permitted}>
+	<EcosystemList client:visible />
+</LayoutSidebar>

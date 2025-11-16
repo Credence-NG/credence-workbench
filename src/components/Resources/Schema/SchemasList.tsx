@@ -20,7 +20,6 @@ import SearchInput from '../../SearchInput';
 import { getFromLocalStorage, removeFromLocalStorage, setToLocalStorage } from '../../../api/Auth';
 import { pathRoutes } from '../../../config/pathRoutes';
 import { getOrganizationById } from '../../../api/organization';
-import Select, { type SingleValue, type ActionMeta } from 'react-select';
 import { Create, SchemaEndorsement } from '../../Issuance/Constant';
 import { DidMethod, SchemaType, SchemaTypes } from '../../../common/enums';
 import { envConfig } from '../../../config/envConfig';
@@ -227,10 +226,10 @@ const SchemaList = (props: {
 		const response = await getOrganizationById(orgId);
 		const { data } = response as AxiosResponse;
 		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
-			const did = data?.data?.org_agents?.[0]?.orgDid;
+			const did = data?.data?.org_agents?.orgDid;
 
 			await setToLocalStorage(storageKeys.ORG_DID, did)
-			if (data?.data?.org_agents && data?.data?.org_agents?.length > 0) {
+			if (data?.data?.org_agents && typeof data?.data?.org_agents === 'object') {
 				setWalletStatus(true);
 			}
 			if (did.includes(DidMethod.POLYGON) || did.includes(DidMethod.KEY) || did.includes(DidMethod.WEB)) {
@@ -358,6 +357,7 @@ const SchemaList = (props: {
 											issuerDid={element['issuerId']}
 											attributes={element['attributes']}
 											created={element['createDateTime']}
+											selectedSchemas={[]}
 											showCheckbox={false}
 											onClickCallback={schemaSelectionCallback}
 											onClickW3CCallback={W3CSchemaSelectionCallback}

@@ -178,9 +178,9 @@ const VerificationSchemasList = ({ routeType }: { routeType: string }) => {
 		const response = await getOrganizationById(orgId);
 		const { data } = response as AxiosResponse;
 		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
-			const did = data?.data?.org_agents?.[0]?.orgDid;
+			const did = data?.data?.org_agents?.orgDid;
 
-			if (data?.data?.org_agents && data?.data?.org_agents?.length > 0) {
+			if (data?.data?.org_agents && typeof data?.data?.org_agents === 'object') {
 				setWalletStatus(true);
 			}
 			if (did.includes(DidMethod.POLYGON) || did.includes(DidMethod.KEY) || did.includes(DidMethod.WEB)) {

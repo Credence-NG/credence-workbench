@@ -1,0 +1,19 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Credential card for dark mode -->
+  <rect x="15" y="25" width="90" height="70" rx="10" fill="#e5e7eb" stroke="#e5e7eb" stroke-width="3"/>
+  
+  <!-- Credential seal/badge -->
+  <circle cx="90" cy="40" r="15" fill="#d1d5db"/>
+  <path d="M90 32 l4 8 l8-1 l-3 7 l6 5 l-8 3 l0 8 l-7-4 l-7 4 l0-8 l-8-3 l6-5 l-3-7 l8 1 z" fill="#e5e7eb"/>
+  
+  <!-- Content lines -->
+  <rect x="25" y="50" width="45" height="5" rx="2" fill="#d1d5db"/>
+  <rect x="25" y="60" width="40" height="5" rx="2" fill="#d1d5db"/>
+  <rect x="25" y="70" width="35" height="5" rx="2" fill="#d1d5db"/>
+  <rect x="25" y="80" width="50" height="5" rx="2" fill="#d1d5db"/>
+  
+  <!-- Security elements -->
+  <rect x="20" y="85" width="12" height="8" rx="3" fill="#9ca3af"/>
+  <rect x="35" y="85" width="12" height="8" rx="3" fill="#9ca3af"/>
+  <rect x="50" y="85" width="12" height="8" rx="3" fill="#9ca3af"/>
+</svg>

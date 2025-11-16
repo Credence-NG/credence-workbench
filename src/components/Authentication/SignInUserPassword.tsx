@@ -20,6 +20,9 @@ import React, { useState } from 'react';
 import { PlatformRoles } from '../../common/enums';
 import { pathRoutes } from '../../config/pathRoutes';
 import KeyClockResetPassword from './KeyCloakResetPassword';
+import { Roles } from '../../utils/enums/roles';
+import { getUserInvitations } from '../../api/invitations';
+import { checkOrganizationStatus } from '../../utils/organizationStatus';
 
 interface passwordValue {
 	password: string;
@@ -43,9 +46,26 @@ const SignInUserPassword = (signInUserProps: SignInUser3Props) => {
 	const [passwordVisible, setPasswordVisible] = useState(false);
 	const [openModel, setOpenModel] = useState<boolean>(false);
 
+	// Helper function to get the first organization where user has a role (excluding platform admin)
+	const getFirstOrganizationRole = (userOrgRoles: any[]) => {
+		// Filter out platform admin roles and global roles (like holder) to get actual organization roles
+		const organizationRoles = userOrgRoles.filter(
+			(item: { orgRole: { name: string }, orgId: string | null }) =>
+				item.orgRole.name !== PlatformRoles.platformAdmin && item.orgId !== null
+		);
+
+		// Return the first organization role if any exist
+		return organizationRoles.length > 0 ? organizationRoles[0] : null;
+	};
+
 	const getUserDetails = async (access_token: string) => {
 		const userDetails = await getUserProfile(access_token);
 		const { data } = userDetails as AxiosResponse;
+
+		console.log('🔍 SIGNIN DEBUG: FULL getUserProfile response:', JSON.stringify(userDetails, null, 2));
+		console.log('🔍 SIGNIN DEBUG: data structure:', JSON.stringify(data, null, 2));
+		console.log('🔍 SIGNIN DEBUG: userOrgRoles check - length:', data?.data?.userOrgRoles?.length);
+		console.log('🔍 SIGNIN DEBUG: userOrgRoles array:', data?.data?.userOrgRoles);
 
 		if (data?.data?.userOrgRoles?.length > 0) {
 			// Check if user is platform admin
@@ -57,13 +77,23 @@ const SignInUserPassword = (signInUserProps: SignInUser3Props) => {
 
 			// Get all user roles for storage
 			const permissionArray: string[] = [];
+			console.log('🔍 SIGNIN DEBUG: Full API response structure:', JSON.stringify(data, null, 2));
+			console.log('🔍 SIGNIN DEBUG: userOrgRoles array:', data?.data?.userOrgRoles);
+
 			data?.data?.userOrgRoles?.forEach(
-				(element: { orgRole: { name: string } }) =>
-					permissionArray.push(element?.orgRole?.name),
+				(element: { orgRole: { name: string } }) => {
+					console.log('🔍 SIGNIN DEBUG: Processing role element:', element);
+					permissionArray.push(element?.orgRole?.name)
+				},
 			);
 
+			console.log('🔍 SIGNIN DEBUG: Final permissionArray:', permissionArray);
+			console.log('🔍 SIGNIN DEBUG: Permissions as joined string:', permissionArray.join(','));
+
 			// Store all user roles including platform admin
+			console.log('🔍 SIGNIN DEBUG: About to store USER_ROLES:', permissionArray.join(','));
 			await setToLocalStorage(storageKeys.USER_ROLES, permissionArray.join(','));
+			console.log('🔍 SIGNIN DEBUG: About to store PERMISSIONS:', permissionArray);
 			await setToLocalStorage(storageKeys.PERMISSIONS, permissionArray);
 
 			const { id, profileImg, firstName, email } = data?.data || {}
@@ -75,42 +105,107 @@ const SignInUserPassword = (signInUserProps: SignInUser3Props) => {
 
 			// Store organization data for dashboard functionality
 			// Platform admin users also need org context to access dashboard features
+			console.log('🔍 SIGNIN DEBUG: userOrgRoles length:', data?.data?.userOrgRoles?.length || 0);
 			if (data?.data?.userOrgRoles?.length > 0) {
-				// Get organization roles (excluding platform_admin for org context)
+				// Get organization roles (excluding platform_admin and global roles like holder)
 				const orgRoles = data?.data?.userOrgRoles
-					.filter((item: { orgRole: { name: string } }) =>
-						item.orgRole.name !== PlatformRoles.platformAdmin)
+					.filter((item: { orgRole: { name: string }, orgId: string | null }) =>
+						item.orgRole.name !== PlatformRoles.platformAdmin && item.orgId !== null)
 					.map((item: { orgRole: { name: string } }) => item.orgRole.name);
+
+				console.log('🔍 SIGNIN DEBUG: Filtered orgRoles (excluding platform_admin and global roles):', orgRoles);
 
 				// Store organization roles and org ID for dashboard access
 				if (orgRoles.length > 0) {
+					console.log('🔍 SIGNIN DEBUG: About to store ORG_ROLES:', orgRoles.join(','));
 					await setToLocalStorage(storageKeys.ORG_ROLES, orgRoles.join(','));
 
-					// Get the first organization ID for context
-					const firstOrgRole = data?.data?.userOrgRoles.find(
-						(item: { orgRole: { name: string } }) =>
-							item.orgRole.name !== PlatformRoles.platformAdmin
-					);
+					// Get the first organization where user has a role
+					const firstOrgRole = getFirstOrganizationRole(data?.data?.userOrgRoles);
 
+					console.log('🔍 SIGNIN DEBUG: firstOrgRole selected:', firstOrgRole);
 					if (firstOrgRole?.orgId) {
+						console.log('🔍 SIGNIN DEBUG: About to store ORG_ID:', firstOrgRole.orgId);
 						await setToLocalStorage(storageKeys.ORG_ID, firstOrgRole.orgId);
 					}
+				} else {
+					console.log('🔍 SIGNIN DEBUG: No org roles found - user has no organization membership');
+					// User has no organization roles - need to check for invitations or redirect to registration
+					// This will be handled in the return logic below
 				}
+			} else {
+				console.log('🔍 SIGNIN DEBUG: No userOrgRoles in API response');
 			}
 
 			// Return the appropriate role for redirect logic
+			const nonPlatformAdminRoles = data?.data?.userOrgRoles?.filter(
+				(item: { orgRole: { name: string }, orgId: string | null }) =>
+					item.orgRole.name !== PlatformRoles.platformAdmin && item.orgId !== null
+			) || [];
+
 			if (platformAdminRole) {
 				// User is platform admin - return platform_admin role
 				return {
 					role: platformAdminRole.orgRole,
 				};
-			} else {
+			} else if (nonPlatformAdminRoles.length > 0) {
 				// User has organization roles (member, issuer, verifier, admin, owner)
 				// Return the first organization role (any role works for dashboard routing)
-				const firstRole = data?.data?.userOrgRoles[0]?.orgRole;
+				const firstRole = nonPlatformAdminRoles[0]?.orgRole;
+				console.log('🔍 SIGNIN DEBUG: Selected organization role:', firstRole);
 				return {
 					role: firstRole,
 				};
+			} else {
+				// User has no organization roles - check for invitations or redirect to registration
+				console.log('🔍 SIGNIN DEBUG: User has no organization roles - checking for invitations');
+
+				// Check if user has pending invitations
+				try {
+					const invitationsResponse = await getUserInvitations(1, 10, '');
+					const { data: invitationsData } = invitationsResponse as AxiosResponse;
+
+					if (invitationsData?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
+						const pendingInvitations = invitationsData?.data?.invitations?.filter(
+							(invitation: any) => invitation.status === 'pending'
+						) || [];
+
+						if (pendingInvitations.length > 0) {
+							console.log('🔍 SIGNIN DEBUG: User has pending invitations - redirecting to dashboard');
+							// User has pending invitations - create a temporary role to allow dashboard access
+							return {
+								role: { name: 'member' }, // Temporary role for invitation handling
+							};
+						}
+					}
+				} catch (error) {
+					console.error('🔍 SIGNIN DEBUG: Error checking invitations:', error);
+				}
+
+				// No organization roles and no invitations - check for pending organization before redirecting
+				try {
+					console.log('🔍 SIGNIN DEBUG: Checking for pending organization status...');
+					const orgStatus = await checkOrganizationStatus();
+
+					if (orgStatus.organizationStatus === 'pending') {
+						console.log('🔍 SIGNIN DEBUG: User has pending organization - redirecting to pending review page');
+						window.location.href = pathRoutes.organizations.pendingOrganizationReview;
+						return null;
+					}
+
+					if (orgStatus.organizationStatus === 'rejected') {
+						console.log('🔍 SIGNIN DEBUG: User has rejected organization - redirecting to registration for resubmission');
+						window.location.href = pathRoutes.organizations.register;
+						return null;
+					}
+				} catch (error) {
+					console.error('🔍 SIGNIN DEBUG: Error checking organization status:', error);
+				}
+
+				// No organization roles, no invitations, and no pending organization - redirect to organization registration
+				console.log('🔍 SIGNIN DEBUG: No organization roles, invitations, or pending organization - redirecting to organization registration');
+				window.location.href = pathRoutes.organizations.register;
+				return null;
 			}
 		} else {
 			setFailure(userDetails as string);
@@ -119,6 +214,9 @@ const SignInUserPassword = (signInUserProps: SignInUser3Props) => {
 	};
 
 	const signInUser = async (values: passwordValue) => {
+		console.log('🔍 SIGNIN DEBUG: signInUser called with values:', values);
+		console.log('🔍 SIGNIN DEBUG: email:', email);
+
 		const payload: SignInUser3Props = {
 			email: email?.trim()?.toLocaleLowerCase(),
 			isPasskey: false,
@@ -128,6 +226,9 @@ const SignInUserPassword = (signInUserProps: SignInUser3Props) => {
 		const loginRsp = await loginUser(payload);
 		const { data } = loginRsp as AxiosResponse;
 
+		console.log('🔍 SIGNIN DEBUG: Login API response:', JSON.stringify(loginRsp, null, 2));
+		console.log('🔍 SIGNIN DEBUG: Login statusCode:', data?.statusCode);
+
 		if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
 			if (data?.data?.isRegisteredToSupabase) {
 				setOpenModel(true);
@@ -135,7 +236,11 @@ const SignInUserPassword = (signInUserProps: SignInUser3Props) => {
 			} else {
 				await setToLocalStorage(storageKeys.TOKEN, data?.data?.access_token);
 				await setToLocalStorage(storageKeys.REFRESH_TOKEN, data?.data?.refresh_token);
+
+				console.log('🔍 SIGNIN DEBUG: About to call getUserDetails with access token');
+				console.log('🔍 SIGNIN DEBUG: Login API response data:', JSON.stringify(data, null, 2));
 				const userRole = await getUserDetails(data?.data?.access_token);
+				console.log('🔍 SIGNIN DEBUG: getUserDetails returned:', userRole);
 
 				const userPayload = {
 					...data,
@@ -156,8 +261,20 @@ const SignInUserPassword = (signInUserProps: SignInUser3Props) => {
 
 				// Always do client-side redirect instead of relying on API redirect
 				// because middleware intercepts 302 responses and redirects back to sign-in
-				// Platform admin gets dashboard as entry page, can access platform-settings from there
-				const redirectUrl = pathRoutes.users.dashboard;
+
+				// Enhanced Registration Flow: Check if user needs to register an organization
+				const userHasOrganizations = data?.data?.userOrgRoles?.length > 0;
+				const isHolderRole = userRole?.role?.name === 'holder';
+
+				let redirectUrl: string;
+
+				if (isHolderRole && !userHasOrganizations) {
+					// New user with holder role and no organization - redirect to organization registration
+					redirectUrl = pathRoutes.organizations.register;
+				} else {
+					// Everyone else goes to dashboard (including platform admins, users with orgs)
+					redirectUrl = pathRoutes.users.dashboard;
+				}
 				window.location.href = redirectUrl;
 			}
 		} else {

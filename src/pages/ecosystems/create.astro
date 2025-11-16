@@ -1,0 +1,46 @@
+---
+import LayoutSidebar from '../../app/LayoutSidebar.astro';
+import CreateEcosystemForm from '../../components/Ecosystem/CreateEcosystemForm';
+import { checkUserSession } from '../../utils/check-session';
+
+const response = await checkUserSession({cookies: Astro.cookies, currentPath: Astro.url.pathname});
+
+if (!response.authorized) {
+	return Astro.redirect(response.redirect);
+}
+
+// Check platform admin from cookies (server-side)
+const cookieHeader = Astro.request.headers.get('cookie') || '';
+const parseCookies = (cookieStr: string) => {
+	const cookies: Record<string, string> = {};
+	cookieStr.split(';').forEach(cookie => {
+		const [name, value] = cookie.trim().split('=');
+		if (name && value) {
+			cookies[name] = decodeURIComponent(value);
+		}
+	});
+	return cookies;
+};
+
+const cookies = parseCookies(cookieHeader);
+const userRoles = cookies.user_roles || '';
+const role = cookies.role || '';
+
+console.log('🔍 [create.astro] Server-side check:', { role, userRoles });
+
+// Only Platform Admins can create ecosystems
+const isPlatformAdmin = role === 'platform_admin' || userRoles.includes('platform_admin');
+
+console.log('🔍 [create.astro] isPlatformAdmin:', isPlatformAdmin);
+
+if (!isPlatformAdmin) {
+	console.log('❌ [create.astro] Not platform admin, redirecting');
+	return Astro.redirect('/ecosystems?error=unauthorized');
+}
+
+console.log('✅ [create.astro] Platform admin verified, showing form');
+---
+
+<LayoutSidebar notFoundPage={!response.permitted}>
+	<CreateEcosystemForm client:visible />
+</LayoutSidebar>

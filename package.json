@@ -1,6 +1,6 @@
 {
-	"name": "credebl-studio",
-	"version": "2.0.0",
+	"name": "confirmd-studio",
+	"version": "2.1.0",
 	"description": "An open-source Self-Sovereign Identity Platform",
 	"keywords": [
 		"self-sovereign identity",
@@ -8,21 +8,32 @@
 		"did",
 		"verifiable credential"
 	],
-	"homepage": "https://credebl.id",
-	"bugs": "https://github.com/themesberg/flowbite-astro-admin-dashboard/issues",
-	"repository": "https://github.com/themesberg/flowbite-astro-admin-dashboard.git",
+	"homepage": "https://getconfirmd.com",
+	"bugs": "",
+	"repository": "",
 	"license": "Apache 2.0",
-	"author": "AYANWORKS Technology Solutions Pvt. Ltd.",
+	"author": "Cowrie Exchange Ltd.",
 	"contributors": [
-		"Ajay Jadhav <https://twitter.com/ajile_in>"
+		"Cowrie Exchange Ltd."
 	],
 	"type": "module",
 	"scripts": {
-		"dev": "astro dev",
-		"start": "astro dev",
-		"build": "astro build",
-		"preview": "deno run --allow-net --allow-read --allow-env ./dist/server/entry.mjs",
-		"astro": "astro"
+		"dev": "NODE_ENV=development astro dev",
+		"dev:debug": "NODE_ENV=development DEBUG=* astro dev",
+		"start": "NODE_ENV=development astro dev",
+		"build": "NODE_ENV=production astro build",
+		"build:dev": "NODE_ENV=development astro build",
+		"build:staging": "NODE_ENV=staging astro build",
+		"build:prod": "NODE_ENV=production astro build",
+		"preview": "NODE_ENV=production deno run --allow-net --allow-read --allow-env ./dist/server/entry.mjs",
+		"preview:dev": "NODE_ENV=development deno run --allow-net --allow-read --allow-env ./dist/server/entry.mjs",
+		"astro": "astro",
+		"env:check": "node -e \"console.log('NODE_ENV:', process.env.NODE_ENV); console.log('Platform:', process.platform);\"",
+		"env:test": "node scripts/test-env.js",
+		"env:test:dev": "NODE_ENV=development node scripts/test-env.js",
+		"env:test:staging": "NODE_ENV=staging node scripts/test-env.js",
+		"env:test:prod": "NODE_ENV=production node scripts/test-env.js",
+		"docker:test": "bash scripts/test-docker-env.sh"
 	},
 	"dependencies": {
 		"@astrojs/react": "^3.3.4",
@@ -32,7 +43,6 @@
 		"@babel/runtime": "^7.24.5",
 		"@babel/runtime-corejs3": "^7.24.5",
 		"@deno/astro-adapter": "^0.1.2",
-		"@faker-js/faker": "^8.4.1",
 		"@radix-ui/react-avatar": "^1.0.4",
 		"@shadcn/ui": "^0.0.4",
 		"@simplewebauthn/browser": "^9.0.1",
@@ -43,6 +53,7 @@
 		"apexcharts": "^3.49.1",
 		"astro": "^4.8.4",
 		"axios": "^1.6.8",
+		"chart.js": "^4.5.0",
 		"cookie": "^0.6.0",
 		"crypto-js": "^4.2.0",
 		"dom-to-image": "^2.6.0",
@@ -62,6 +73,7 @@
 		"qrcode.react": "^3.1.0",
 		"react": "^18.3.1",
 		"react-avatar": "^5.0.3",
+		"react-chartjs-2": "^5.3.0",
 		"react-dom": "^18.3.1",
 		"react-icons": "^5.2.1",
 		"react-qr-code": "^2.0.13",
@@ -75,6 +87,8 @@
 		"tailwindcss": "^3.4.3",
 		"uuid": "^9.0.1",
 		"vite": "^5.3.2",
+		"winston": "^3.18.3",
+		"winston-daily-rotate-file": "^4.7.1",
 		"yup": "^1.4.0"
 	},
 	"devDependencies": {

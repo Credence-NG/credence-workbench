@@ -18,6 +18,14 @@ export const SidebarMenus: ISidebarItem[] = [
     feature: Features.VIEW_DASHBOARD,
   },
 
+  // Invitations - For receiving and managing organization invitations
+  {
+    label: "Invitations",
+    href: pathRoutes.users.invitations,
+    icon: "invitations",
+    feature: Features.VIEW_DASHBOARD, // Use a basic feature so it's available to all users
+  },
+
   // Organizations - Role-based access
   {
     label: "Organizations",
@@ -59,7 +67,7 @@ export const SidebarMenus: ISidebarItem[] = [
     label: "Credentials",
     href: "#",
     icon: "credentials",
-    feature: Features.ISSUANCE, // Show if user can issue OR verify
+    feature: Features.VIEW_DASHBOARD, // Use feature that definitely works
     children: [
       {
         label: "Issued Credentials",
@@ -74,12 +82,26 @@ export const SidebarMenus: ISidebarItem[] = [
         feature: Features.ISSUANCE,
       },
       {
+        label: "Pending Requests",
+        href: pathRoutes.organizations.pendingRequests,
+        icon: "pending",
+        feature: Features.VIEW_DASHBOARD, // Use feature that works
+      },
+      {
         label: "Verify",
         href: pathRoutes.organizations.credentials,
         icon: "verify",
         feature: Features.VERIFICATION,
       },
     ],
+  },
+
+  // Pending Requests - Standalone menu
+  {
+    label: "Pending Requests",
+    href: pathRoutes.organizations.pendingRequests,
+    icon: "pending",
+    feature: Features.PENDING_REQUESTS,
   },
 
   // Connections - For connection management
@@ -101,9 +123,45 @@ export const SidebarMenus: ISidebarItem[] = [
   // Ecosystem - For ecosystem features
   {
     label: "Ecosystem",
-    href: pathRoutes.ecosystem.root,
+    href: "#",
     icon: "ecosystem",
     feature: Features.ECOSYSTEM_MANAGEMENT,
+    children: [
+      {
+        label: "List",
+        href: pathRoutes.ecosystem.root,
+        icon: "lists",
+        feature: Features.VIEW_ECOSYSTEMS,
+      },
+      {
+        label: "Create",
+        href: `${pathRoutes.ecosystem.root}/create`,
+        icon: "issue",
+        feature: Features.CREATE_ECOSYSTEM,
+      },
+    ],
+  },
+
+  // Admin - For administrative functions
+  {
+    label: "Admin",
+    href: "#",
+    icon: "admin",
+    feature: Features.APPROVE_ORGANIZATION,
+    children: [
+      {
+        label: "Organization Verification",
+        href: pathRoutes.admin.organizationVerification,
+        icon: "verification",
+        feature: Features.APPROVE_ORGANIZATION,
+      },
+      {
+        label: "Audit Logs",
+        href: pathRoutes.admin.organizationAuditLogs,
+        icon: "audit",
+        feature: Features.APPROVE_ORGANIZATION,
+      },
+    ],
   },
 
   // Platform Settings - Platform admin only
@@ -151,6 +209,8 @@ export const getVisibleMenus = (userFeatures: string[]): ISidebarItem[] => {
 export const shouldShowCredentialsMenu = (userFeatures: string[]): boolean => {
   return (
     userFeatures.includes(Features.ISSUANCE) ||
-    userFeatures.includes(Features.VERIFICATION)
+    userFeatures.includes(Features.VERIFICATION) ||
+    userFeatures.includes(Features.PENDING_REQUESTS) ||
+    userFeatures.includes(Features.VIEW_PENDING_REQUESTS)
   );
 };

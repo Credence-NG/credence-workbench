@@ -39,8 +39,8 @@ const IssueCred = () => {
 		schemaName: '',
 		version: '',
 		schemaId: '',
-		w3cAttributes:[],
-		issuerDid:''
+		w3cAttributes: [],
+		issuerDid: ''
 	});
 	const [issuanceFormPayload, setIssuanceFormPayload] = useState<
 		IssuanceFormPayload[]
@@ -48,29 +48,29 @@ const IssueCred = () => {
 	const [issuanceLoader, setIssuanceLoader] = useState<boolean>(false);
 	const [failure, setFailure] = useState<string | null>(null);
 	const [schemaAttributesDetails, setSchemaAttributesDetails] = useState<
-	IAttribute[]
+		IAttribute[]
 	>([]);
 	const [success, setSuccess] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
-	const [w3cSchema, setW3CSchema]= useState<boolean>(false);
+	const [w3cSchema, setW3CSchema] = useState<boolean>(false);
 	const [credentialType, setCredentialType] = useState<CredentialType>();
 	const [schemaType, setSchemaType] = useState<SchemaTypeValue>();
-	const [orgDid, setOrgDid]= useState<string>('');
+	const [orgDid, setOrgDid] = useState<string>('');
 
-  useEffect(() => {
-       fetchOrganizationDetails();
-    return () => setUserLoader(false);
-  }, []); 
+	useEffect(() => {
+		fetchOrganizationDetails();
+		return () => setUserLoader(false);
+	}, []);
 
 	const fetchOrganizationDetails = async () => {
-		try{
+		try {
 			const orgId = await getFromLocalStorage(storageKeys.ORG_ID);
 			if (!orgId) return;
 			const response = await getOrganizationById(orgId);
 			const { data } = response as AxiosResponse;
 			if (data?.statusCode === apiStatusCodes.API_STATUS_SUCCESS) {
-				const did = data?.data?.org_agents?.[0]?.orgDid;
-				
+				const did = data?.data?.org_agents?.orgDid;
+
 				if (did?.includes(DidMethod.POLYGON)) {
 					setW3CSchema(true);
 					setCredentialType(CredentialType.JSONLD);
@@ -87,15 +87,15 @@ const IssueCred = () => {
 				}
 				else if (did?.includes(DidMethod.INDY)) {
 					setW3CSchema(false);
-					setCredentialType(CredentialType.INDY);	
+					setCredentialType(CredentialType.INDY);
 					await getSchemaAndUsers(false)
 				}
 			}
-		} catch(error){
+		} catch (error) {
 			console.log('Error in getSchemaAndUsers:', error);
 			setFailure('Error fetching schema and users');
 		}
-		
+
 	};
 	const getSchemaAndUsers = async (w3cSchema: boolean) => {
 		try {
@@ -103,7 +103,7 @@ const IssueCred = () => {
 				const credDefId = await getFromLocalStorage(storageKeys.CRED_DEF_ID);
 				const schemaId = await getFromLocalStorage(storageKeys.SCHEMA_ID);
 				const orgId = await getFromLocalStorage(storageKeys.ORG_ID);
-	
+
 				createSchemaPayload(schemaId, credDefId);
 				setUserLoader(true);
 				const selectedUsers = await getSelectedUsers();
@@ -116,17 +116,17 @@ const IssueCred = () => {
 			}
 			if (w3cSchema) {
 				const orgId = await getFromLocalStorage(storageKeys.ORG_ID);
-				const getW3cSchemaDetails = await getFromLocalStorage(storageKeys.W3C_SCHEMA_DETAILS);		
+				const getW3cSchemaDetails = await getFromLocalStorage(storageKeys.W3C_SCHEMA_DETAILS);
 				const parsedW3cSchemaDetails = JSON.parse(getW3cSchemaDetails);
 
 				const schemaId = parsedW3cSchemaDetails?.schemaId;
 				createW3cSchemaPayload(schemaId, parsedW3cSchemaDetails);
-				
+
 				setUserLoader(true);
 				const selectedUsers = await getSelectedUsers();
 
 				const attributes = parsedW3cSchemaDetails?.attributes;
-				
+
 				if (attributes && attributes?.length) {
 					createW3cIssuanceForm(selectedUsers, attributes, orgId);
 				} else {
@@ -144,7 +144,7 @@ const IssueCred = () => {
 		attributes: DataTypeAttributes[],
 		credDefId: string,
 		orgId: string,
-     	) => {
+	) => {
 		const credentialData = selectedUsers.map((user) => {
 			const attributesArray = attributes.map((attr) => ({
 				name: attr.attributeName,
@@ -173,9 +173,9 @@ const IssueCred = () => {
 		selectedUsers: SelectedUsers[],
 		attributes: DataTypeAttributes[],
 		orgId: string,
-     	) => {
-		const credentialData =  selectedUsers.map((user) => {
-			
+	) => {
+		const credentialData = selectedUsers.map((user) => {
+
 			const attributesArray = attributes.length > 0 && attributes.map((attr) => ({
 				name: attr.attributeName,
 				value: '',
@@ -241,26 +241,26 @@ const IssueCred = () => {
 
 	const getSchemaDetails = async (w3cSchema: boolean) => {
 		try {
-		  if (!w3cSchema) {
-			const schemaAttributes = await getFromLocalStorage(storageKeys.SCHEMA_ATTR);
-	  
-			let parsedSchemaAttributes = [];
-			if (schemaAttributes) {
-			  try {
-				parsedSchemaAttributes = JSON.parse(schemaAttributes);
-			  } catch (e) {
-			  }
+			if (!w3cSchema) {
+				const schemaAttributes = await getFromLocalStorage(storageKeys.SCHEMA_ATTR);
+
+				let parsedSchemaAttributes = [];
+				if (schemaAttributes) {
+					try {
+						parsedSchemaAttributes = JSON.parse(schemaAttributes);
+					} catch (e) {
+					}
+				}
+				setSchemaAttributesDetails(parsedSchemaAttributes?.attribute);
+				return parsedSchemaAttributes?.attribute || null;
 			}
-			setSchemaAttributesDetails(parsedSchemaAttributes?.attribute);
-			return parsedSchemaAttributes?.attribute || null;
-		  }
-	  
+
 		} catch (error) {
-		  console.error('Error in getSchemaAndUsers:', error);
-		  setFailure('Error fetching schema and users');
+			console.error('Error in getSchemaAndUsers:', error);
+			setFailure('Error fetching schema and users');
 		}
 		return null;
-	  };
+	};
 
 	const createSchemaPayload = async (schemaId: string, credDefId: string) => {
 		if (schemaId) {
@@ -277,34 +277,34 @@ const IssueCred = () => {
 
 			if (parsedW3cSchemaDetails) {
 				setW3CSchemaDetails(parsedW3cSchemaDetails);
-				
+
 				setSchemaLoader(false);
 
 			}
 		}
 	};
 
-const getSelectedUsers = async (): Promise<SelectedUsers[]> => {
+	const getSelectedUsers = async (): Promise<SelectedUsers[]> => {
 		try {
-		  const selectedUsers = await getFromLocalStorage(storageKeys.SELECTED_USER);
-		  if (!selectedUsers) {
-			return [];
-		  }
-		  return JSON.parse(selectedUsers);
+			const selectedUsers = await getFromLocalStorage(storageKeys.SELECTED_USER);
+			if (!selectedUsers) {
+				return [];
+			}
+			return JSON.parse(selectedUsers);
 		} catch (error) {
-		  console.error("Error parsing selectedUsers:", error);
-		  return [];
+			console.error("Error parsing selectedUsers:", error);
+			return [];
 		}
-	  };
+	};
 
 
 	const handleSubmit = async (values: IssuanceFormPayload) => {
-	
+
 		let issuancePayload;
-	
-		if (!w3cSchema) { 
+
+		if (!w3cSchema) {
 			issuancePayload = {
-				credentialData: values.credentialData.map((item) => {				
+				credentialData: values.credentialData.map((item) => {
 					return {
 						...item,
 						attributes: item?.attributes?.map((attr) => ({
@@ -313,12 +313,12 @@ const getSelectedUsers = async (): Promise<SelectedUsers[]> => {
 						})),
 					};
 				}),
-				
-				credentialDefinitionId: values.credentialDefinitionId, 
+
+				credentialDefinitionId: values.credentialDefinitionId,
 				orgId: values.orgId,
 			};
-		} 
-		if(w3cSchema) { 
+		}
+		if (w3cSchema) {
 			issuancePayload = {
 				credentialData: values?.credentialData.map((item) => {
 					return {
@@ -338,15 +338,15 @@ const getSelectedUsers = async (): Promise<SelectedUsers[]> => {
 							issuanceDate: new Date().toISOString(),
 							//FIXME: Logic for passing default value as 0 for empty value of number dataType attributes.
 							credentialSubject: item?.attributes?.reduce((acc, attr) => {
-								
+
 								if (attr.dataType === 'number' && (attr.value === '' || attr.value === null)) {
-									
+
 									acc[attr.name] = 0;
 								} else if (attr.dataType === 'string' && attr.value === '') {
-								
+
 									acc[attr.name] = '';
 								} else if (attr.value !== null) {
-									
+
 									acc[attr.name] = attr.value;
 								}
 								return acc;
@@ -354,23 +354,23 @@ const getSelectedUsers = async (): Promise<SelectedUsers[]> => {
 						},
 
 						options: {
-							proofType: schemaType=== SchemaTypeValue.POLYGON ? ProofType.polygon : ProofType.no_ledger,
+							proofType: schemaType === SchemaTypeValue.POLYGON ? ProofType.polygon : ProofType.no_ledger,
 							proofPurpose: proofPurpose
 						}
 					};
 				}),
 				orgId: values.orgId,
 			};
-			
-			}
-		
+
+		}
+
 		const convertedAttributesValues = {
 			...issuancePayload,
 		};
 
 		setIssuanceLoader(true);
 		const issueCredRes = await issueCredential(convertedAttributesValues, credentialType);
-	
+
 		const { data } = issueCredRes as AxiosResponse;
 
 		if (data?.statusCode === apiStatusCodes.API_STATUS_CREATED) {
@@ -403,26 +403,26 @@ const getSelectedUsers = async (): Promise<SelectedUsers[]> => {
 					Issuance
 				</h1>
 			</div>
-			
-  {!schemaLoader && !w3cSchema ? (
-                                
-								<SummaryCard
-                                    schemaName={schemaDetails.schemaName}
-                                    schemaId={schemaDetails.schemaId}
-                                    version={schemaDetails.version}
-                                    credDefId={schemaDetails.credDefId}
-					                hideCredDefId={false}
 
-                                />
-                            ) : (
-                                <SummaryCard
-                                    schemaName={w3cSchemaDetails.schemaName}
-                                    schemaId={w3cSchemaDetails.schemaId}
-                                    version={w3cSchemaDetails.version}
-					                hideCredDefId={false}
+			{!schemaLoader && !w3cSchema ? (
 
-                                />
-                            )}
+				<SummaryCard
+					schemaName={schemaDetails.schemaName}
+					schemaId={schemaDetails.schemaId}
+					version={schemaDetails.version}
+					credDefId={schemaDetails.credDefId}
+					hideCredDefId={false}
+
+				/>
+			) : (
+				<SummaryCard
+					schemaName={w3cSchemaDetails.schemaName}
+					schemaId={w3cSchemaDetails.schemaId}
+					version={w3cSchemaDetails.version}
+					hideCredDefId={false}
+
+				/>
+			)}
 
 			{userLoader ? (
 				<div className="flex items-center justify-center mb-4">
@@ -513,81 +513,81 @@ const getSelectedUsers = async (): Promise<SelectedUsers[]> => {
 																<h3 className="dark:text-white">Attributes</h3>
 																<div className="container mx-auto pr-2">
 																	<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
-																		
+
 																		{attributes?.map((attr, attrIndex) => {
 
 																			return (
-																			<div
-																				key={`${user.connectionId}-${attr.name}-${attrIndex}`}
-																			>
-																				<div key={attr?.name} className="flex">
-																					<label
-																						htmlFor={`credentialData.${index}.attributes.${attrIndex}.value`}
-																						className="dark:text-white w-2/5 pr-3 flex justify-end items-center font-light"
-																					>
-																						<div className="flex items-center word-break-word text-end">
-																							<Name
-																								attr={attr?.name}
-																							/>
-																							{attr.isRequired && (
-																								<span className="text-red-500">
-																									*
-																								</span>
-																							)}{' '}
-																							:
-																						</div>
-																					</label>
-																					<div className="w-3/5">
-																						<Field
-																							type={
-																								attr?.dataType === 'date'
-																									? 'date'
-																									: attr?.dataType
-																							}
-																							id={`credentialData.${index}.attributes.${attrIndex}.value`}
-																							name={`credentialData.${index}.attributes.${attrIndex}.value`}
-																							className="bg-gray-50 relative border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-																							validate={(value: any) => {
-																								try {
-																									Yup.reach(
-																										validationSchema,
-																										`credentialData.${index}.attributes.${attrIndex}.value`,
-																									).validateSync(value, {
-																										abortEarly: false,
-																									});
-																								} catch (error) {
-																									return error.message;
+																				<div
+																					key={`${user.connectionId}-${attr.name}-${attrIndex}`}
+																				>
+																					<div key={attr?.name} className="flex">
+																						<label
+																							htmlFor={`credentialData.${index}.attributes.${attrIndex}.value`}
+																							className="dark:text-white w-2/5 pr-3 flex justify-end items-center font-light"
+																						>
+																							<div className="flex items-center word-break-word text-end">
+																								<Name
+																									attr={attr?.name}
+																								/>
+																								{attr.isRequired && (
+																									<span className="text-red-500">
+																										*
+																									</span>
+																								)}{' '}
+																								:
+																							</div>
+																						</label>
+																						<div className="w-3/5">
+																							<Field
+																								type={
+																									attr?.dataType === 'date'
+																										? 'date'
+																										: attr?.dataType
 																								}
-																							}}
-																						/>
-																						{errors?.credentialData &&
-																							errors?.credentialData?.[index] &&
-																							errors?.credentialData[index]
-																								?.attributes &&
-																							errors?.credentialData[index]
-																								?.attributes[attrIndex] &&
-																							errors?.credentialData[index]
-																								?.attributes[attrIndex]?.value &&
-																							touched?.credentialData &&
-																							touched?.credentialData[index]
-																								?.attributes &&
-																							touched?.credentialData[index]
-																								?.attributes[attrIndex]
-																								?.value && (
-																								<div className="text-red-500 absolute text-xs word-break-word">
-																									{
-																										errors?.credentialData?.[
-																											index
-																										]?.attributes?.[attrIndex]
-																											?.value
+																								id={`credentialData.${index}.attributes.${attrIndex}.value`}
+																								name={`credentialData.${index}.attributes.${attrIndex}.value`}
+																								className="bg-gray-50 relative border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+																								validate={(value: any) => {
+																									try {
+																										Yup.reach(
+																											validationSchema,
+																											`credentialData.${index}.attributes.${attrIndex}.value`,
+																										).validateSync(value, {
+																											abortEarly: false,
+																										});
+																									} catch (error) {
+																										return error.message;
 																									}
-																								</div>
-																							)}{' '}
+																								}}
+																							/>
+																							{errors?.credentialData &&
+																								errors?.credentialData?.[index] &&
+																								errors?.credentialData[index]
+																									?.attributes &&
+																								errors?.credentialData[index]
+																									?.attributes[attrIndex] &&
+																								errors?.credentialData[index]
+																									?.attributes[attrIndex]?.value &&
+																								touched?.credentialData &&
+																								touched?.credentialData[index]
+																									?.attributes &&
+																								touched?.credentialData[index]
+																									?.attributes[attrIndex]
+																									?.value && (
+																									<div className="text-red-500 absolute text-xs word-break-word">
+																										{
+																											errors?.credentialData?.[
+																												index
+																											]?.attributes?.[attrIndex]
+																												?.value
+																										}
+																									</div>
+																								)}{' '}
+																						</div>
 																					</div>
 																				</div>
-																			</div>
 																			)
-												})}
+																		})}
 																	</div>
 																</div>
 															</Card>
@@ -636,7 +636,7 @@ const getSelectedUsers = async (): Promise<SelectedUsers[]> => {
 	);
 };
 
-const Name = (attr: { attr: string}) => {
+const Name = (attr: { attr: string }) => {
 	return (
 		<>
 			{attr?.attr

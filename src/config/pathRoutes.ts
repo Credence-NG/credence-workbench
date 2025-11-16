@@ -18,6 +18,8 @@ export const pathRoutes = {
     connectionList: "/connections",
     platformSetting: "/platform-settings",
     settings: "/settings",
+    registerOrganization: "/register-organization",
+    pendingOrganizationReview: "/pending-organization-review",
   },
   ecosystem: {
     root: "/ecosystems",
@@ -25,12 +27,17 @@ export const pathRoutes = {
   },
   organizations: {
     root: "/organizations",
+    register: "/organizations/register",
+    registerOrganization: "/organizations/register-organization",
+    pendingOrganizationReview: "/organizations/pending-organization-review",
     invitations: "/organizations/invitations",
     users: "/organizations/users",
     schemas: `/organizations/schemas`,
     dashboard: "/organizations/dashboard",
     issuedCredentials: "/organizations/credentials",
     credentials: "/organizations/verification",
+    pendingRequests: "/organizations/pending-requests",
+    pendingRequestDetails: "/organizations/pending-requests/details",
     createSchema: "/organizations/schemas/create",
     deleteOrganization: "/organizations/delete-organizations",
 
@@ -77,6 +84,10 @@ export const pathRoutes = {
       W3CVerification:
         "/organizations/verification/verify-credentials/schemas/connections/verification",
     },
+  },
+  admin: {
+    organizationVerification: "/admin/organization-verification",
+    organizationAuditLogs: "/admin/organization-audit-logs",
   },
   documentation: {
     root: envConfig.PLATFORM_DATA.docs,
