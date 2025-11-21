@@ -19,7 +19,7 @@ const { requestId } = Astro.params;
 // Server-side logging - fetch API response directly on server
 if (requestId) {
 	try {
-		const baseUrl = import.meta.env.PUBLIC_BASE_URL || 'https://platform.confamd.com';
+		const baseUrl = import.meta.env.PUBLIC_BASE_URL || 'http://localhost:5000';
 		const token = Astro.cookies.get('token')?.value;
 		const orgId = Astro.cookies.get('orgId')?.value;
 		

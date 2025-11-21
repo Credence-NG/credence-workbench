@@ -3,6 +3,7 @@ import { storageKeys } from "../config/CommonConstant";
 import { getHeaderConfigs } from "../config/GetHeaderConfigs";
 import { apiRoutes } from "../config/apiRoutes";
 import { axiosGet, axiosPut } from "../services/apiRequests";
+import { envConfig } from "../config/envConfig";
 
 /**
  * Comprehensive TypeScript interfaces for Credential Request system
@@ -356,7 +357,7 @@ export const updateCredentialRequestStatus = async (
 export const getCredentialDefinitionAttributes = async (
   credentialDefinitionId: string
 ) => {
-  const url = `https://platform.confamd.com/orgs/public-list-fields-by-creddef/${encodeURIComponent(
+  const url = `${envConfig.PUBLIC_BASE_URL}/orgs/public-list-fields-by-creddef/${encodeURIComponent(
     credentialDefinitionId
   )}`;
 

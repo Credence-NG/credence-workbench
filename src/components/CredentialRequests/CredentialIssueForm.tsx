@@ -9,6 +9,7 @@ import { updateCredentialRequestStatus } from '../../api/credentialRequests';
 import { CredentialType } from '../../common/enums';
 import CustomSpinner from '../CustomSpinner';
 import type { AxiosResponse } from 'axios';
+import { pathRoutes } from '../../config/pathRoutes';
 
 interface CredentialIssueFormProps {
 	requestDetails: CredentialRequestDetails;
@@ -311,7 +312,7 @@ const CredentialIssueForm: React.FC<CredentialIssueFormProps> = ({
 
 					// Redirect to credentials page after a short delay
 					setTimeout(() => {
-						window.location.href = 'https://studio.confamd.com/organizations/credentials';
+						window.location.href = pathRoutes.organizations.credentials;
 					}, 2000);
 				} else {
 					throw new Error('Failed to send credential offer');

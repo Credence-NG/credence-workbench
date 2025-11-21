@@ -30,6 +30,11 @@ logs/*.json
 # misc.
 .dev*
 
+# backup files
+*.bak
+**/*.bak
+.env.bak
+
 # hidden files
 ._darcs
 .bzr
