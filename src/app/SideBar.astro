@@ -2,5 +2,50 @@
 import DynamicSidebar from '../components/Sidebar/DynamicSidebar';
 ---
 
-<!-- Dynamic Role-Based Sidebar -->
+<!--
+	Static placeholder for Flowbite drawer initialization.
+	This element is needed because Flowbite's JS runs before React hydrates,
+	and it looks for an element with id="sidebar" to initialize the drawer.
+	The DynamicSidebar component will hide this placeholder once React mounts.
+
+	Note: We use both id="sidebar" (for Flowbite) and id="sidebar-placeholder"
+	(for React to find and hide it). The data attribute is used as a secondary identifier.
+-->
+<aside
+	id="sidebar"
+	data-sidebar-placeholder="true"
+	class="fixed top-0 left-0 z-40 flex flex-col flex-shrink-0 w-64 h-full pt-16 font-normal duration-75 transition-transform -translate-x-full lg:translate-x-0"
+	aria-label="Sidebar"
+	data-drawer-backdrop="false"
+>
+	<div class="relative flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+		<div class="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
+			<div class="flex-1 px-3 space-y-1 bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-slate-700">
+				<!-- Loading placeholder -->
+				<ul class="pb-2 space-y-2">
+					<li class="animate-pulse">
+						<div class="flex items-center p-2">
+							<div class="w-6 h-6 bg-gray-200 dark:bg-slate-600 rounded"></div>
+							<div class="ml-3 h-4 bg-gray-200 dark:bg-slate-600 rounded w-24"></div>
+						</div>
+					</li>
+					<li class="animate-pulse">
+						<div class="flex items-center p-2">
+							<div class="w-6 h-6 bg-gray-200 dark:bg-slate-600 rounded"></div>
+							<div class="ml-3 h-4 bg-gray-200 dark:bg-slate-600 rounded w-20"></div>
+						</div>
+					</li>
+					<li class="animate-pulse">
+						<div class="flex items-center p-2">
+							<div class="w-6 h-6 bg-gray-200 dark:bg-slate-600 rounded"></div>
+							<div class="ml-3 h-4 bg-gray-200 dark:bg-slate-600 rounded w-28"></div>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</aside>
+
+<!-- Dynamic Role-Based Sidebar (hides placeholder and renders actual sidebar when React mounts) -->
 <DynamicSidebar client:only="react" />

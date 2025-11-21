@@ -4,13 +4,20 @@ import { RolePermissions } from '../../config/permissions';
 import { getFromLocalStorage } from '../../api/Auth';
 import { storageKeys } from '../../config/CommonConstant';
 import { Features } from '../../utils/enums/features';
-import { PlatformRoles } from '../../common/enums';
 
 const DynamicSidebar = () => {
 	const [userRoles, setUserRoles] = useState<string[]>([]);
 	const [userFeatures, setUserFeatures] = useState<string[]>([]);
 	const [visibleMenus, setVisibleMenus] = useState<ISidebarItem[]>([]);
 	const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
+
+	// Hide the static placeholder sidebar when this React component mounts
+	useEffect(() => {
+		const staticSidebar = document.querySelector('[data-sidebar-placeholder="true"]');
+		if (staticSidebar instanceof HTMLElement) {
+			staticSidebar.style.display = 'none';
+		}
+	}, []);
 
 	const getUserRoles = async (): Promise<string[]> => {
 		try {
