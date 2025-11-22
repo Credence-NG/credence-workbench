@@ -20,6 +20,7 @@ const {
   PUBLIC_BASE_URL_DEVELOPMENT,
   PUBLIC_BASE_URL_STAGING,
   PUBLIC_BASE_URL_PRODUCTION,
+  PUBLIC_API_URL, // Public-facing API URL for browser requests (used in Docker when internal URL differs)
   PUBLIC_ECOSYSTEM_FRONT_END_URL,
   PUBLIC_POLYGON_TESTNET_URL,
   PUBLIC_POLYGON_MAINNET_URL,
@@ -92,8 +93,23 @@ const getEnvironmentAwareBaseUrl = () => {
   return PUBLIC_BASE_URL || import.meta.env.PUBLIC_BASE_URL || "http://localhost:5000";
 };
 
+// Get the public-facing API URL for browser/client-side requests
+// In Docker, PUBLIC_BASE_URL may be internal (e.g., http://nginx-proxy:5000)
+// but browsers need the public URL (e.g., https://platform.getconfirmd.com)
+const getPublicApiUrl = () => {
+  // If PUBLIC_API_URL is set, use it (for Docker deployments)
+  if (PUBLIC_API_URL || import.meta.env.PUBLIC_API_URL) {
+    return PUBLIC_API_URL || import.meta.env.PUBLIC_API_URL;
+  }
+  // Otherwise, fall back to the base URL (works for non-Docker deployments)
+  return getEnvironmentAwareBaseUrl();
+};
+
 export const envConfig = {
+  // Internal/SSR base URL (may be Docker internal URL)
   PUBLIC_BASE_URL: getEnvironmentAwareBaseUrl(),
+  // Public API URL for browser requests (always publicly accessible)
+  PUBLIC_API_URL: getPublicApiUrl(),
   // PUBLIC_ECOSYSTEM_BASE_URL same as PUBLIC_BASE_URL - using single backend
   PUBLIC_ECOSYSTEM_BASE_URL: getEnvironmentAwareBaseUrl(),
   PUBLIC_ECOSYSTEM_FRONT_END_URL:

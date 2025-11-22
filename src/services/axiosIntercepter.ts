@@ -7,12 +7,15 @@ import { apiStatusCodes, storageKeys } from "../config/CommonConstant";
 import { TokenRefreshManager } from "../utils/tokenRefreshManager";
 import { APILogger } from "../utils/logger";
 
+// Use PUBLIC_API_URL for browser requests (publicly accessible URL)
+// In Docker, PUBLIC_BASE_URL may be internal (e.g., http://nginx-proxy:5000)
+// but browsers need the public URL (e.g., https://platform.getconfirmd.com)
 const instance = axios.create({
-  baseURL: envConfig.PUBLIC_BASE_URL,
+  baseURL: envConfig.PUBLIC_API_URL || envConfig.PUBLIC_BASE_URL,
 });
 
 const EcosystemInstance = axios.create({
-  baseURL: envConfig.PUBLIC_ECOSYSTEM_BASE_URL,
+  baseURL: envConfig.PUBLIC_API_URL || envConfig.PUBLIC_ECOSYSTEM_BASE_URL,
 });
 
 const checkAuthentication = async (
@@ -34,7 +37,8 @@ const checkAuthentication = async (
   });
 
   try {
-    const baseURL = envConfig.PUBLIC_BASE_URL;
+    // Use PUBLIC_API_URL for browser requests (publicly accessible)
+    const baseURL = envConfig.PUBLIC_API_URL || envConfig.PUBLIC_BASE_URL;
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -100,7 +104,8 @@ const checkAuthentication = async (
 
 instance.interceptors.request.use(
   async (config) => {
-    config.baseURL = envConfig.PUBLIC_BASE_URL;
+    // Use PUBLIC_API_URL for browser requests (publicly accessible)
+    config.baseURL = envConfig.PUBLIC_API_URL || envConfig.PUBLIC_BASE_URL;
     return config;
   },
   (error) => Promise.reject(error)
@@ -108,7 +113,8 @@ instance.interceptors.request.use(
 
 EcosystemInstance.interceptors.request.use(
   async (config) => {
-    config.baseURL = envConfig.PUBLIC_ECOSYSTEM_BASE_URL;
+    // Use PUBLIC_API_URL for browser requests (publicly accessible)
+    config.baseURL = envConfig.PUBLIC_API_URL || envConfig.PUBLIC_ECOSYSTEM_BASE_URL;
     return config;
   },
   (error) => Promise.reject(error)
