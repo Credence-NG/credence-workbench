@@ -7,6 +7,10 @@ import NavBarSidebar from './NavBarSidebar.astro';
 import ErrorNotFound from '../modules/ErrorNotFound.astro';
 
 const { showOptions, notFoundPage } = Astro.props || {};
+
+// When using NavBarSidebar with hideOrgAgent=false, we need a sidebar placeholder
+// for Flowbite's drawer initialization (otherwise it throws "sidebar not found" error)
+const needsSidebarPlaceholder = notFoundPage === false && !showOptions;
 ---
 
 <LayoutCommon>
@@ -17,6 +21,16 @@ const { showOptions, notFoundPage } = Astro.props || {};
 			<NavBarStacked />
 		)
 	}
+
+	{/* Hidden sidebar placeholder for Flowbite drawer - only needed when NavBarSidebar shows the toggle button */}
+	{needsSidebarPlaceholder && (
+		<aside
+			id="sidebar"
+			class="hidden"
+			aria-hidden="true"
+			data-drawer-backdrop="false"
+		></aside>
+	)}
 
 	{
 		notFoundPage ? (
