@@ -314,15 +314,15 @@ const WebhookRegistration: React.FC<WebhookRegistrationProps> = ({ className = '
 						<Label htmlFor="webhook-url" value="Webhook URL" />
 						<TextInput
 							id="webhook-url"
-							type="url"
-							placeholder="https://example.com/webhook"
+							type="text"
+							placeholder="http://demo-app:3300/api/webhooks/confirmd"
 							value={webhookUrl}
 							onChange={(e) => setWebhookUrl(e.target.value)}
 							required
 							disabled={formLoading}
 						/>
 						<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-							Enter the URL where webhook events will be sent
+							Enter the URL where webhook events will be sent (supports Docker internal URLs)
 						</p>
 					</div>
 
@@ -571,10 +571,10 @@ const WebhookRegistration: React.FC<WebhookRegistrationProps> = ({ className = '
 									<Field
 										id="edit-webhookUrl"
 										name="webhookUrl"
-										type="url"
+										type="text"
 										value={formik.values.webhookUrl}
 										className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-										placeholder="https://example.com/webhook"
+										placeholder="http://demo-app:3300/api/webhooks/confirmd"
 										disabled={formLoading}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
 											formik.setFieldValue('webhookUrl', e.target.value);
