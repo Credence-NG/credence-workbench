@@ -89,11 +89,11 @@ const WebhookRegistration: React.FC<WebhookRegistrationProps> = ({ className = '
 			return;
 		}
 
-		// Basic URL validation
-		try {
-			new URL(webhookUrl);
-		} catch {
-			setFailure('Please enter a valid webhook URL');
+		// Basic URL validation - allow Docker internal URLs
+		const url = webhookUrl.trim();
+		const urlPattern = /^https?:\/\/.+/;
+		if (!urlPattern.test(url)) {
+			setFailure('Please enter a valid webhook URL starting with http:// or https://');
 			return;
 		}
 
@@ -506,7 +506,7 @@ const WebhookRegistration: React.FC<WebhookRegistrationProps> = ({ className = '
 								.trim(),
 							webhookUrl: yup
 								.string()
-								.url('Must be a valid URL')
+								.matches(/^https?:\/\/.+/, 'Must be a valid URL starting with http:// or https://')
 								.required('Webhook URL is required')
 								.trim(),
 							webhookSecret: yup
