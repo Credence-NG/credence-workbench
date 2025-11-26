@@ -15,9 +15,9 @@ export class ProactiveTokenRefresh {
   private static lastActivity: number = Date.now();
   private static isActive: boolean = true;
   private static isInitialized: boolean = false;
-  private static readonly ACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes of inactivity = inactive
-  private static readonly REFRESH_INTERVAL = 2 * 60 * 1000; // Check every 2 minutes (more frequent for 5min tokens)
-  private static readonly TOKEN_REFRESH_THRESHOLD = 90 * 1000; // Refresh if less than 1.5 minutes left (more aggressive)
+  private static readonly ACTIVITY_TIMEOUT = 45 * 60 * 1000; // 45 minutes of inactivity = inactive (balanced timeout)
+  private static readonly REFRESH_INTERVAL = 2 * 60 * 1000; // Check every 2 minutes (frequent enough for safety)
+  private static readonly TOKEN_REFRESH_THRESHOLD = 3 * 60 * 1000; // Refresh if less than 3 minutes left (safe buffer)
 
   /**
    * Check if we're on an authentication page where token refresh shouldn't run
